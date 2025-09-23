@@ -1,0 +1,12 @@
+@import 'tailwindcss';
+
+/* :root {
+    --background: white;
+    --foreground: black;
+} */
+
+@layer base {
+    body {
+        @apply bg-white text-black;
+    }
+}
