@@ -7,6 +7,10 @@ use Inertia\Inertia;
 //     return Inertia::render('login');
 // })->name('login');
 
+Route::get('/' ,function(){
+    return Inertia::render('home');
+})-> name('home');
+
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', function () {
         return Inertia::render('dashboard');
@@ -23,3 +27,16 @@ Route::get('/SignUp', function(){
 Route::get('/login', function(){
     return Inertia::render('login');
 })->name('login');
+
+
+Route::prefix('/COD')->group(function(){
+    Route::get('/date', function(){
+        return Inertia::render('CODDate');
+    })->name('CODDate');
+    Route::get('/time', function(){
+        return Inertia::render('CODTime');
+    })->name('CODTime');
+    Route::get('/location', function(){
+        return Inertia::render("CODLocation");
+    })->name("CODLocation");
+});

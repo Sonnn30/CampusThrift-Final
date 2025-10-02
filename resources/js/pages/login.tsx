@@ -26,7 +26,7 @@ export default function Login(){
                 <img src="/LogoCampusTrrft2.png" alt="Logo" width={143} height={90}/>
                 <div className="flex justify-center items-center">
                 {/* Label */}
-                <h2 className="text-[30px]">Sign Up as</h2>
+                <h2 className="text-[30px]">Log In as</h2>
 
                 {/* Dropdown wrapper */}
                 <div className="relative">

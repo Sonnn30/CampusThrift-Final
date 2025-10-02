@@ -29,7 +29,7 @@ export default function SignUp(){
         }
     return(
         <>
-        <div className="flex justify-center items-center h-[120vh] bg-[#ECEEDF]"> 
+        <div className="flex justify-center items-center h-[120vh] bg-[#ECEEDF]">
             <div className="flex flex-col justify-center gap-8 items-center bg-[#BBDCE5] w-[698px] h-[800px] rounded-2xl">
                 <img src="/LogoCampusTrrft2.png" alt="Logo" width={143} height={90}/>
                 <div className="flex justify-center items-center">
@@ -107,7 +107,7 @@ export default function SignUp(){
                 </div>
             </div>
         </div>
-        
+
         </>
 
     )
