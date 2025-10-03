@@ -40,3 +40,15 @@ Route::prefix('/COD')->group(function(){
         return Inertia::render("CODLocation");
     })->name("CODLocation");
 });
+Route::prefix('/Seller')->group(function(){
+    Route::get('/product', function(){
+        return Inertia::render('SellerProduct');
+    })->name('SellerProduct');
+    Route::get('/product/add', function(){
+        return Inertia::render('SellerProductAdd');
+    })->name('SellerProductAdd');
+    Route::get('/product/edit', function(){
+        return Inertia::render('SellerProductEdit');
+    })->name('SellerProductEdit');
+});
+
