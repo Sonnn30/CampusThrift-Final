@@ -50,5 +50,36 @@ Route::prefix('/Seller')->group(function(){
     Route::get('/product/edit', function(){
         return Inertia::render('SellerProductEdit');
     })->name('SellerProductEdit');
+    Route::get('/MySchedule', function(){
+        return Inertia::render('MySchedule');
+    })->name('SellerMySchedule');
+    Route::get('/TransactionDetail', function(){
+        return Inertia::render('TransactionDetail', [
+            'role' => 'Seller'
+        ]);
+    })->name("SellerTransactionDetail");
+    Route::get('/chat', function(){
+        return Inertia::render('chat');
+    })->name('SellerChat');
+    Route::get('/review', function(){
+        return Inertia::render('review');
+    })->name('SellerReview');
+});
+
+Route::prefix('/Buyer')->group(function(){
+    Route::get('/MySchedule', function(){
+        return Inertia::render('MySchedule');
+    })->name('BuyerMySchedule');
+    Route::get('/TransactionDetail', function(){
+        return Inertia::render('TransactionDetail', [
+            'role' => 'Buyer'
+        ]);
+    })->name('BuyerTransactionDetail');
+    Route::get('/chat', function(){
+        return Inertia::render('chat');
+    })->name("BuyerChat");
+    Route::get('/review', function(){
+        return Inertia::render('review');
+    })->name('BuyerReview');
 });
 
