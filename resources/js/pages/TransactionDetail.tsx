@@ -1,7 +1,7 @@
-import { P } from "node_modules/framer-motion/dist/types.d-DsEeKk6G";
 import { useState } from "react"
 
 export default function TransactionDetail({role}){
+    console.log(role)
     const [selectedRating, setSelectedRating] = useState(5);
     const [pop, setPop] = useState(false);
     const [selected, setSelected] = useState(false)
@@ -14,16 +14,21 @@ export default function TransactionDetail({role}){
     const [selected8, setSelected8] = useState(false)
     const stars = [1, 2, 3, 4, 5]
     const goToNextB = () =>{
-        window.location.href = '/Buyer/chat'
+        window.location.href = '/Seller/chat'
     }
     const goToNextS = () =>{
-        window.location.href = '/Seller/chat'
+        window.location.href = '/Buyer/chat'
     }
 
     const goToNext = () =>{
         window.location.href = '/Buyer/review'
     }
-
+    function goToProfileB(){
+        window.location.href = `/Buyer/Profile`
+    }
+    function goToProfileS(){
+        window.location.href = `/Seller/Profile`
+    }
     return(
         <>
             <div className= "flex justify-center items-center w-full h-full py-10 px-30">
@@ -69,25 +74,29 @@ export default function TransactionDetail({role}){
                         </div>
                     </div>
                     <div className="flex justify-center gap-80 mt-14">
-                    <div className="flex flex-col justify-center items-center">
-                        <img src="/user.png" alt="user" className="w-[63px] h-[63px]"/>
-                        <p className="text-[20px]">Nama Buyer</p>
-                                <div className="flex text-3xl">
-                                {stars.map((s) => (
-                                <span key={s} className="text-[#FFC107]">{s <= Math.floor(selectedRating) ? "★" : "☆"}</span>
-                                ))}
-                            </div>
+                    <div className="flex flex-col justify-center items-center cursor-pointer">
+                        <div className="w-full flex flex-col justify-center items-center" onClick={goToProfileB}>
+                            <img src="/user.png" alt="user" className="w-[63px] h-[63px]"/>
+                            <p className="text-[20px]">Nama Buyer</p>
+                                    <div className="flex text-3xl">
+                                    {stars.map((s) => (
+                                    <span key={s} className="text-[#FFC107]">{s <= Math.floor(selectedRating) ? "★" : "☆"}</span>
+                                    ))}
+                                </div>
+                        </div>
                         <div className="bg-[#9BC0E6] w-[60px] h-[60px] flex justify-center items-center rounded-full mt-3 hover:cursor-pointer" onClick={goToNextB}>
                             <button onClick={goToNextB}><img src="/chat.png" alt="chat" className="w-[38px] h-[38px] hover:cursor-pointer"/></button>
                         </div>
                     </div>
-                    <div className="flex flex-col justify-center items-center">
-                        <img src="/user.png" alt="user" className="w-[63px] h-[63px]"/>
-                        <p className="text-[20px]">Nama Seller</p>
-                        <div className="flex text-3xl">
-                            {stars.map((s) => (
-                            <span key={s} className="text-[#FFC107]">{s <= Math.floor(selectedRating) ? "★" : "☆"}</span>
-                            ))}
+                    <div className="flex flex-col justify-center items-center cursor-pointer">
+                        <div className="w-full flex flex-col justify-center items-center" onClick={goToProfileS}>
+                            <img src="/user.png" alt="user" className="w-[63px] h-[63px]"/>
+                            <p className="text-[20px]">Nama Seller</p>
+                            <div className="flex text-3xl">
+                                {stars.map((s) => (
+                                <span key={s} className="text-[#FFC107]">{s <= Math.floor(selectedRating) ? "★" : "☆"}</span>
+                                ))}
+                            </div>
                         </div>
                         <div className="bg-[#9BC0E6] w-[60px] h-[60px] flex justify-center items-center rounded-full mt-3 hover:cursor-pointer" onClick={goToNextS}>
                             <button><img src="/chat.png" alt="chat" className="w-[38px] h-[38px] hover:cursor-pointer" onClick={goToNextS}/></button>

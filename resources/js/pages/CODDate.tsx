@@ -44,6 +44,9 @@ export default function CODDate(){
                                     mode="single"
                                     selected={selected}
                                     onSelect={setSelected}
+                                    formatters={{
+                                        formatWeekdayName: (date) => format(date, "EEE"), 
+                                    }}
                                     classNames={{
                                         day_button: "w-[50px] h-[50px] hover:bg-[#BBDCE5] rounded-full hover:cursor-pointer",
                                         root: "text-[24px]",

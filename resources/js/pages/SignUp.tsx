@@ -1,9 +1,11 @@
 import { motion } from "framer-motion"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Link } from "@inertiajs/react"
 import ReactMarkdown from "react-markdown";
+import { router } from "@inertiajs/react";
 
-export default function SignUp(){
+
+export default function SignUp({flash}){
     const [click, setClick] = useState(false)
     const [click2, setClick2] = useState(false)
     const [click3, setClick3] = useState(false)
@@ -22,11 +24,41 @@ export default function SignUp(){
         "animate2": {scale: 1}
     }
 
+    const handleSubmit = (e) => {
+    e.preventDefault();
+    console.log("Sending data:", {
+        name: value3,
+        email: value,
+        password: value2,
+        password_confirmation: value4,
+        role: selected,
+    });
+
+    router.post("/SignUp", {
+        name: value3,
+        email: value,
+        password: value2,
+        password_confirmation: value4,
+        role: selected,
+    }, {
+    onError: (errors) => {
+        console.log(errors);
+        alert(JSON.stringify(errors));
+    },
+    });
+    };
 
     const handleSelect = (option) => {
-                setSelected(option)
-                setOpen(false) // tutup dropdown setelah pilih
+        setSelected(option)
+        setOpen(false) // tutup dropdown setelah pilih
+    }
+
+    useEffect(() => {
+        if (flash?.error) {
+        alert(flash.error);
         }
+    }, [flash]);
+
     return(
         <>
         <div className="flex justify-center items-center h-[120vh] bg-[#ECEEDF]">
@@ -90,16 +122,16 @@ export default function SignUp(){
                         click2 || value2 !== "" ? "animate1" : "animate2"
                     }>Password
                     </motion.p>
-                    <input type="text" className="w-[420px] ml-5 h-[40px] border-none outline-none " value={value2} onChange={(e) => setValue2(e.target.value)} onFocus={() => setClick2(true)} onBlur={() => setClick2(false)}/>
+                    <input type="password" className="w-[420px] ml-5 h-[40px] border-none outline-none " value={value2} onChange={(e) => setValue2(e.target.value)} onFocus={() => setClick2(true)} onBlur={() => setClick2(false)}/>
                 </div>
                 <div className="relative w-[465px] h-[53px] border-2 rounded-2xl flex items-center">
                     <motion.p className="flex absolute left-3 justify-center text-[20px] bg-[#BBDCE5] w-43" variants={variants} animate={
                         click4 || value4 !== "" ? "animate1" : "animate2"
                     }>Confirm Password
                     </motion.p>
-                    <input type="text" className="w-[420px] ml-5 h-[40px] border-none outline-none " value={value4} onChange={(e) => setValue4(e.target.value)} onFocus={() => setClick4(true)} onBlur={() => setClick4(false)}/>
+                    <input type="password" className="w-[420px] ml-5 h-[40px] border-none outline-none " value={value4} onChange={(e) => setValue4(e.target.value)} onFocus={() => setClick4(true)} onBlur={() => setClick4(false)}/>
                 </div>
-                <div className="bg-[#CFAB8D] mt-3 w-[465px] h-[53px] flex justify-center items-center text-[30px] rounded-xl hover:bg-[#D9C4B0] hover:cursor-pointer">
+                <div className="bg-[#CFAB8D] mt-3 w-[465px] h-[53px] flex justify-center items-center text-[30px] rounded-xl hover:bg-[#D9C4B0] hover:cursor-pointer" onClick={handleSubmit}>
                     Sign Up
                 </div>
                 <div className="-mt-5">

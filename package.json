@@ -24,7 +24,10 @@
         "typescript-eslint": "^8.23.0"
     },
     "dependencies": {
+        "@cloudinary/react": "^1.14.3",
+        "@cloudinary/url-gen": "^1.22.0",
         "@headlessui/react": "^2.2.0",
+        "@inertiajs/inertia": "^0.11.1",
         "@inertiajs/react": "^2.1.4",
         "@ncdai/react-wheel-picker": "^1.0.17",
         "@radix-ui/react-avatar": "^1.1.3",
@@ -55,6 +58,7 @@
         "laravel-vite-plugin": "^2.0",
         "leaflet": "^1.9.4",
         "lucide-react": "^0.475.0",
+        "pusher-js": "^8.4.0",
         "react": "^19.0.0-rc.1",
         "react-day-picker": "^9.11.0",
         "react-dom": "^19.0.0-rc.1",
@@ -66,7 +70,8 @@
         "tailwindcss": "^4.0.0",
         "tailwindcss-animate": "^1.0.7",
         "typescript": "^5.7.2",
-        "vite": "^7.0.4"
+        "vite": "^7.0.4",
+        "ziggy-js": "^2.6.0"
     },
     "optionalDependencies": {
         "@rollup/rollup-linux-x64-gnu": "4.9.5",

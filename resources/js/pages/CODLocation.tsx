@@ -133,7 +133,7 @@ export default function CODLocation(){
                                 <img src="/map.png" alt="calendar" className="absoulute w-[40px] h-[40px]"/>
                                 <p className="text-[24px]">{selectedLocation.display_name}</p>
                         </div>
-                        <div className="relative mt-[25%] ml-7 w-[491px] h-[68px] bg-[#BBDCE5] rounded-xl">
+                        <div className="relative mt-[40%] ml-7 w-[491px] h-[68px] bg-[#BBDCE5] rounded-xl">
                         <button
                             className="absolute inset-0 text-[32px] hover:cursor-pointer"
                             onClick={goToNext}

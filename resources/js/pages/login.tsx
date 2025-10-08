@@ -1,6 +1,7 @@
 import { motion } from "framer-motion"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Link } from "@inertiajs/react"
+import { Inertia } from "@inertiajs/inertia";
 
 export default function Login(){
     const [click, setClick] = useState(false)
@@ -14,14 +15,30 @@ export default function Login(){
         "animate2": {scale: 1}
     }
 
-    const handleSelect = (option) => {
-            setSelected(option)
-            setOpen(false) // tutup dropdown setelah pilih
+
+    useEffect(() => {
+        const savedRole = localStorage.getItem("role")
+        if (savedRole) {
+        setSelected(savedRole)
+        }
+    }, [])
+
+    const handleSelect = (option: string) => {
+        setSelected(option)
+        setOpen(false)
+    }
+
+    const handleLogin = () => {
+        Inertia.post('/login', {
+            email: value,
+            password: value2,
+            role: selected
+        })
     }
 
     return(
         <>
-        <div className="flex justify-center items-center h-screen bg-[#ECEEDF]"> 
+        <div className="flex justify-center items-center h-screen bg-[#ECEEDF]">
             <div className="flex flex-col justify-center gap-8 items-center bg-[#BBDCE5] w-[698px] h-[572px] rounded-2xl">
                 <img src="/LogoCampusTrrft2.png" alt="Logo" width={143} height={90}/>
                 <div className="flex justify-center items-center">
@@ -75,9 +92,9 @@ export default function Login(){
                         click2 || value2 !== "" ? "animate1" : "animate2"
                     }>Password
                     </motion.p>
-                    <input type="text" className="w-[420px] ml-5 h-[40px] border-none outline-none " value={value2} onChange={(e) => setValue2(e.target.value)} onFocus={() => setClick2(true)} onBlur={() => setClick2(false)}/>
+                    <input type="password" className="w-[420px] ml-5 h-[40px] border-none outline-none " value={value2} onChange={(e) => setValue2(e.target.value)} onFocus={() => setClick2(true)} onBlur={() => setClick2(false)}/>
                 </div>
-                <div className="bg-[#CFAB8D] mt-3 w-[465px] h-[53px] flex justify-center items-center text-[30px] rounded-xl hover:bg-[#D9C4B0] hover:cursor-pointer">
+                <div className="bg-[#CFAB8D] mt-3 w-[465px] h-[53px] flex justify-center items-center text-[30px] rounded-xl hover:bg-[#D9C4B0] hover:cursor-pointer" onClick={handleLogin}>
                     Log In
                 </div>
                 <div>

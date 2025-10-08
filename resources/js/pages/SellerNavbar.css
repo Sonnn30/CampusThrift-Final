@@ -1,0 +1,148 @@
+.seller-product-navbar {
+    background-color: #BBDCE5;
+    color: black;
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+
+    padding: 20px 10px;
+    justify-content: space-around;
+    align-items: center;
+    height: auto;
+
+}
+
+.profile-section {
+    margin-left: 8px;
+    width: auto;
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    margin-bottom: 10px;
+    padding-right: 10px;
+    padding-left: 10px;
+}
+
+.seller-profile {
+    width: auto;
+    height: 75px;
+}
+
+.seller-information {
+    display: flex;
+    flex-direction: column;
+    margin-left: 12px;
+}
+
+.seller-information p {
+    font-size: 28px;
+    font-weight: 600;
+}
+
+.seller-information span {
+    font-size: 16px;
+}
+
+.seller-buttons {
+    margin-left: 8px;
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    gap:5px;
+    justify-content: center;
+}
+
+.profile-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    background-color: white;
+    width: 100%;
+    border-radius: 6px;
+    padding: 5px 12px;
+    cursor: pointer;
+    transition: color 0.2s ease-in-out;
+}
+
+.profile-button:hover {
+    background-color: #f3f3f3;
+}
+
+.chat-icon {
+    width: auto;
+    height: 15px;
+    margin-right: 10px;
+}
+
+.mid-section {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 10px;
+    flex-shrink: 1;
+}
+
+.information-container {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-gap: 20px;
+    width: 100%;
+    max-width: 700px;
+}
+
+.seller-stat {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px 20px;
+    gap: 12px;
+    font-size: 16px;
+    font-weight: 500;
+    padding: 10px 10px;
+
+}
+
+.stat-icon {
+    width: auto;
+    height: 24px;
+}
+
+
+.right-section {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    padding: 1rem 2rem;
+    margin-left: 8px;
+}
+
+.add-product {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background-color: white;
+    border: 1px solid black;
+    border-radius: 20px;
+    padding: 8px 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition:  all 0.2s ease-in-out;
+}
+
+.add-product:hover{
+    background-color:  #f1f1f1;
+}
+
+@media (max-width: 600px) {
+  .right-section {
+    justify-content: center;
+    padding: 0.5rem;
+  }
+
+  .add-product {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
