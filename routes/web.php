@@ -112,11 +112,6 @@ Route::prefix('/Buyer')->group(function(){
             "role" => "Buyer"
         ]);
     })->name('BuyerMySchedule');
-    Route::get('/ProductDetail', function(){
-        return Inertia::render('ProductDetail', [
-            "role" => "Buyer"
-        ]);
-    })->name('BuyerProductDetail');
 
     Route::get('/TransactionDetail', function(){
         return Inertia::render('TransactionDetail', [
