@@ -26,25 +26,59 @@ export default function SignUp({flash}){
 
     const handleSubmit = (e) => {
     e.preventDefault();
-    console.log("Sending data:", {
-        name: value3,
-        email: value,
-        password: value2,
-        password_confirmation: value4,
-        role: selected,
-    });
+    const name = value3.trim()
+    const email = value.trim()
+    const password = value2
+    const passwordConfirmation = value4
+
+    // mirror backend constraints
+    const sellerPattern = /^[A-Za-z0-9._%+-]+@binus\.ac\.id$/i
+    const buyerPattern = /^[A-Za-z0-9._%+-]+@(gmail\.com|yahoo\.com|binus\.ac\.id)$/i
+
+    if (!name) {
+        alert('Name is required.')
+        return
+    }
+    if (!email) {
+        alert('Email is required.')
+        return
+    }
+    if (selected === 'Seller') {
+        if (!sellerPattern.test(email)) {
+            alert('Seller must use an email ending with @binus.ac.id')
+            return
+        }
+    } else {
+        if (!buyerPattern.test(email)) {
+            alert('Buyer must use a valid email: @gmail.com, @yahoo.com, or @binus.ac.id')
+            return
+        }
+    }
+    if (!password || password.length < 6) {
+        alert('Password must be at least 6 characters.')
+        return
+    }
+    if (password !== passwordConfirmation) {
+        alert('Password confirmation does not match.')
+        return
+    }
 
     router.post("/SignUp", {
-        name: value3,
-        email: value,
-        password: value2,
-        password_confirmation: value4,
+        name,
+        email,
+        password,
+        password_confirmation: passwordConfirmation,
         role: selected,
     }, {
-    onError: (errors) => {
-        console.log(errors);
-        alert(JSON.stringify(errors));
-    },
+        onError: (errors) => {
+            const messages = Object.values(errors)
+            if (messages.length) alert(messages.join('\n'))
+        },
+        onSuccess: () => {
+            // After successful signup, backend redirects to verification notice.
+            // Ensure navigation in case Inertia stays on the same page.
+            router.visit('/verify-email')
+        }
     });
     };
 

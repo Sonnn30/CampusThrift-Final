@@ -5,6 +5,7 @@ use Inertia\Inertia;
 use App\Http\Controllers\AuthManager;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\MyScheduleController;
 
 Route::get('/', [AuthManager::class, 'UserDashboard'])->name('home');
 
@@ -17,6 +18,11 @@ Route::post('/SignUp', [AuthManager::class, 'SignUpPost'])->name('SignUp.post');
 
 Route::get('/login', [AuthManager::class, 'login'])->name('login');
 Route::post('/login', [AuthManager::class, 'loginPost'])->name('login.post');
+
+// Email verification via code
+Route::get('/verify-email', [AuthManager::class, 'showVerifyEmail'])->name('verification.notice');
+Route::post('/verify-email', [AuthManager::class, 'verifyEmailPost'])->name('verification.verify');
+Route::post('/verify-email/resend', [AuthManager::class, 'resendVerification'])->name('verification.resend');
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/Buyer', [AuthManager::class, 'UserDashboard'])->name('BuyerHome');
@@ -41,11 +47,7 @@ Route::prefix('/COD')->group(function(){
 Route::prefix('/Seller')->group(function(){
 
 
-    Route::get('/MySchedule', function(){
-        return Inertia::render('MySchedule', [
-            "role" => "Seller"
-        ]);
-    })->name('SellerMySchedule');
+    Route::get('/MySchedule', [MyScheduleController::class, 'index'])->defaults('role', 'Seller')->name('SellerMySchedule');
 
     Route::get('/TransactionDetail', function(){
         return Inertia::render('TransactionDetail', [
@@ -81,6 +83,9 @@ Route::prefix('/Seller')->middleware(['auth'])->group(function() {
     Route::get('/product/edit/{product}', [ProductController::class, 'edit'])->name('SellerProductEdit');
     Route::put('/ProductDetail/{product}', [ProductController::class, 'update'])->name('SellerProductUpdate');
     Route::delete('/ProductDetail/{product}', [ProductController::class, 'destroy'])->name('SellerProductDelete');
+    // Appointment status updates
+    Route::post('/appointments/{appointment}/confirm', [MyScheduleController::class, 'confirm'])->name('appointments.confirm');
+    Route::post('/appointments/{appointment}/reject', [MyScheduleController::class, 'reject'])->name('appointments.reject');
 });
 
 
@@ -107,11 +112,7 @@ Route::prefix('/Buyer')->group(function(){
             "role" => "Buyer"
         ]);
     })->name('BuyerProduct');
-    Route::get('/MySchedule', function(){
-        return Inertia::render('MySchedule', [
-            "role" => "Buyer"
-        ]);
-    })->name('BuyerMySchedule');
+    Route::get('/MySchedule', [MyScheduleController::class, 'index'])->defaults('role', 'Buyer')->name('BuyerMySchedule');
 
     Route::get('/TransactionDetail', function(){
         return Inertia::render('TransactionDetail', [

@@ -1,7 +1,22 @@
 import React from "react";
 import dayjs from "dayjs";
 
-export default function Month({ daysInWeek, events = [], role}) {
+type ScheduleEvent = {
+  id: number | string;
+  title: string;
+  date: string;
+  time: string;
+  status?: string;
+  color?: string;
+}
+
+type MonthProps = {
+  daysInWeek: any[];
+  events?: ScheduleEvent[];
+  role: any;
+}
+
+export default function Month({ daysInWeek, events = [], role}: MonthProps) {
   const hours = Array.from({ length: 24 }, (_, i) => `${String(i).padStart(2, "0")}:00`);
 
   function getCurrentDayClass(day) {

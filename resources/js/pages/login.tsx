@@ -29,6 +29,13 @@ export default function Login(){
     }
 
     const handleLogin = () => {
+        const emailPattern = /^[^@\s]+@[^@\s]+\.com$/i
+        const email = value.trim()
+        if (!emailPattern.test(email)) {
+            alert('Email must contain @ and end with .com')
+            return
+        }
+
         Inertia.post('/login', {
             email: value,
             password: value2,

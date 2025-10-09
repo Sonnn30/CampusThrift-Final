@@ -1,23 +1,36 @@
-import React, { useState, useEffect } from "react";
+import * as React from "react";
+import { useState, useEffect } from "react";
 import { format, addMonths, subMonths } from "date-fns";
 import { DayPicker } from "react-day-picker";
 import Month from "./Month";
+// @ts-ignore - dayjs types may be missing locally
 import dayjs from "dayjs";
+import { Inertia } from "@inertiajs/inertia";
 
-export default function MySchedule({role}) {
+type ScheduleEvent = {
+    id: number | string;
+    title: string;
+    date: string; // YYYY-MM-DD
+    time: string; // HH:mm
+    status?: string;
+    color?: string;
+}
+
+type MyScheduleProps = {
+    role: any;
+    events?: ScheduleEvent[];
+}
+
+export default function MySchedule({role, events = []}: MyScheduleProps) {
     const [selected, setSelected] = useState(dayjs());
-    const [daysInWeek, setDaysInWeek] = useState([]);
+    const [daysInWeek, setDaysInWeek] = useState<any[]>([]);
     const [currMonth, setCurrMonth] = useState(new Date());
 
     useEffect(() => {
         const savedRole = localStorage.getItem("role");
     }, []);
 
-    const events = [
-    { id: 1, title: "COD BarangX", date: "2025-08-05", time: "10:00", color: "bg-blue-200" },
-    { id: 2, title: "COD BarangY", date: "2025-10-05", time: "01:00", color: "bg-blue-200" },
-    { id: 3, title: "COD BarangZ", date: "2025-10-10", time: "11:00", color: "bg-red-300" },
-    ];
+    // events are provided by backend via Inertia props
 
     const eventDates = events.map((e) => new Date(e.date));
     useEffect(() => {
@@ -127,10 +140,10 @@ export default function MySchedule({role}) {
                       <p>Rejected</p>
                     ) : (
                       <div className="flex justify-between gap-2">
-                        <div className="bg-[#68B143] w-[28px] h-[28px] flex justify-center items-center rounded-lg cursor-pointer">
+                        <div className="bg-[#68B143] w-[28px] h-[28px] flex justify-center items-center rounded-lg cursor-pointer" onClick={() => Inertia.post(`/Seller/appointments/${e.id}/confirm`)}>
                           <img src="/check.png" alt="check" className="w-[18px] h-[18px]" />
                         </div>
-                        <div className="bg-[#F64848] w-[28px] h-[28px] flex justify-center items-center rounded-lg cursor-pointer">
+                        <div className="bg-[#F64848] w-[28px] h-[28px] flex justify-center items-center rounded-lg cursor-pointer" onClick={() => Inertia.post(`/Seller/appointments/${e.id}/reject`)}>
                           <img src="/cross.png" alt="cross" className="w-[16px] h-[16px]" />
                         </div>
                       </div>
@@ -155,7 +168,7 @@ export default function MySchedule({role}) {
               {format(currMonth, "MMMM yyyy")}
             </div>
             <div className="flex flex-col h-[870px]">
-              <Month daysInWeek={daysInWeek} events={events} />
+              <Month daysInWeek={daysInWeek as any} events={events as any} role={role} />
             </div>
           </React.Fragment>
         </div>
