@@ -1,15 +1,62 @@
 import React from "react";
 import { format } from "date-fns";
 import { DayPicker } from 'react-day-picker';
+import { router } from '@inertiajs/react';
+import CODDateRoute from '@/routes/CODDate';
 
-export default function CODDate(){
-    const goToNext = () => {
-        if(selected){
-            window.location.href = "/COD/time";
-            localStorage.setItem("selectedDate", selected.toISOString());
-        }
-    }
+interface Product {
+    id: number;
+    product_name: string;
+    product_price: number;
+    description: string;
+    image?: string;
+}
+
+interface CODDateProps {
+    product: Product;
+}
+
+export default function CODDate({ product }: CODDateProps){
     const [selected, setSelected] = React.useState<Date>();
+    const [isSubmitting, setIsSubmitting] = React.useState(false);
+    const [error, setError] = React.useState<string | null>(null);
+
+    const goToNext = () => {
+        if(!selected){
+            setError("Please select a date");
+            return;
+        }
+
+        // Check if selected date is after today
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        if(selected <= today){
+            setError("Please select a date after today");
+            return;
+        }
+
+        setIsSubmitting(true);
+        setError(null);
+
+        router.post(CODDateRoute.store.url(), {
+            product_id: product.id,
+            date: format(selected, 'yyyy-MM-dd')
+        }, {
+            onSuccess: () => {
+                setIsSubmitting(false);
+            },
+            onError: (errors) => {
+                setIsSubmitting(false);
+                if(errors.date){
+                    setError(errors.date);
+                } else if(errors.product_id){
+                    setError(errors.product_id);
+                } else {
+                    setError("An error occurred. Please try again.");
+                }
+            }
+        });
+    }
 
     return(
         <>
@@ -31,8 +78,22 @@ export default function CODDate(){
                                 <img src="/calendar.png" alt="calendar" width={40} height={40}/>
                                 <p className="text-[24px]">{selected ? format(selected, "dd/MM/yyyy") : "No date selected"}</p>
                             </div>
-                            <div className="flex justify-center items-center mt-55 rounded-xl ml-7 w-[491px] h-[68px] bg-[#BBDCE5] hover:cursor-pointer" onClick={goToNext}>
-                                <button className="text-[32px] hover:cursor-pointer" onClick={goToNext}>Next</button>
+
+                            {/* Error message */}
+                            {error && (
+                                <div className="ml-9 mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+                                    {error}
+                                </div>
+                            )}
+
+                            <div className="absolute flex justify-center items-center mt-[35%] rounded-xl ml-7 w-[491px] h-[68px] bg-[#BBDCE5] hover:cursor-pointer disabled:opacity-50" onClick={goToNext}>
+                                <button
+                                    className="text-[32px] hover:cursor-pointer disabled:cursor-not-allowed"
+                                    onClick={goToNext}
+                                    disabled={isSubmitting}
+                                >
+                                    {isSubmitting ? "Processing..." : "Next"}
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -44,8 +105,9 @@ export default function CODDate(){
                                     mode="single"
                                     selected={selected}
                                     onSelect={setSelected}
+                                    disabled={{ before: new Date() }}
                                     formatters={{
-                                        formatWeekdayName: (date) => format(date, "EEE"), 
+                                        formatWeekdayName: (date) => format(date, "EEE"),
                                     }}
                                     classNames={{
                                         day_button: "w-[50px] h-[50px] hover:bg-[#BBDCE5] rounded-full hover:cursor-pointer",

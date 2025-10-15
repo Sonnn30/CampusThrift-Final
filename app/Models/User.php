@@ -47,4 +47,20 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    /**
+     * Check if user is a buyer
+     */
+    public function isBuyer(): bool
+    {
+        return strtolower($this->role) === 'buyer';
+    }
+
+    /**
+     * Check if user is a seller
+     */
+    public function isSeller(): bool
+    {
+        return strtolower($this->role) === 'seller';
+    }
 }

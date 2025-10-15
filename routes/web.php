@@ -5,6 +5,10 @@ use Inertia\Inertia;
 use App\Http\Controllers\AuthManager;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\CODController;
+use App\Http\Controllers\MyScheduleController;
+use App\Http\Controllers\TransactionDetailController;
+use App\Http\Controllers\ReviewController;
 
 Route::get('/', [AuthManager::class, 'UserDashboard'])->name('home');
 
@@ -26,52 +30,51 @@ Route::middleware(['auth'])->group(function () {
 Route::post('/logout', [AuthManager::class, 'logout'])->name('logout');
 
 
-Route::prefix('/COD')->group(function(){
-    Route::get('/date', function(){
-        return Inertia::render('CODDate');
-    })->name('CODDate');
-    Route::get('/time', function(){
-        return Inertia::render('CODTime');
-    })->name('CODTime');
-    Route::get('/location', function(){
-        return Inertia::render("CODLocation");
-    })->name("CODLocation");
+// Route::prefix('/COD')->group(function(){
+//     Route::get('/date', function(){
+//         return Inertia::render('CODDate');
+//     })->name('CODDate');
+//     Route::get('/time', function(){
+//         return Inertia::render('CODTime');
+//     })->name('CODTime');
+//     Route::get('/location', function(){
+//         return Inertia::render("CODLocation");
+//     })->name("CODLocation");
+// });
+
+Route::prefix('/COD')->middleware(['auth'])->group(function(){
+    Route::get('/date', [CODController::class, 'showDate'])->name('CODDate');
+    Route::post('/date', [CODController::class, 'storeDate'])->name('CODDate.store');
+    Route::get('/time', [CODController::class, 'showTime'])->name('CODTime');
+    Route::post('/time', [CODController::class, 'storeTime'])->name('CODTime.store');
+    Route::get('/location', [CODController::class, 'showLocation'])->name('CODLocation');
+    Route::post('/location', [CODController::class, 'storeLocation'])->name('CODLocation.store');
+    Route::get('/appointment/{appointment}', [CODController::class, 'show'])->name('CODAppointment.show');
+    Route::patch('/appointment/{appointment}/status', [CODController::class, 'updateStatus'])->name('CODAppointment.updateStatus');
 });
 
-Route::prefix('/Seller')->group(function(){
+Route::prefix('/Seller')->middleware(['auth', 'seller'])->group(function(){
+    Route::get('/MySchedule', [MyScheduleController::class, 'index'])->name('SellerMySchedule');
+    Route::patch('/appointment/{appointment}/status', [MyScheduleController::class, 'updateStatus'])->name('SellerAppointment.updateStatus');
+    Route::get('/appointment/{appointment}', [MyScheduleController::class, 'show'])->name('SellerAppointment.show');
 
-
-    Route::get('/MySchedule', function(){
-        return Inertia::render('MySchedule', [
-            "role" => "Seller"
-        ]);
-    })->name('SellerMySchedule');
-
-    Route::get('/TransactionDetail', function(){
-        return Inertia::render('TransactionDetail', [
-            'role' => 'Seller'
-        ]);
-    })->name("SellerTransactionDetail");
+    Route::get('/TransactionDetail', [TransactionDetailController::class, 'index'])->name('SellerTransactionDetail');
+    Route::post('/TransactionDetail/deal', [TransactionDetailController::class, 'dealSeller'])->name('SellerTransactionDeal');
 
     Route::get('/chat', function(){
         return Inertia::render('chat');
     })->name('SellerChat');
 
-    Route::get('/review', function(){
-        return Inertia::render('review', [
-            "role" => "Seller"
-        ]);
-    })->name('SellerReview');
+    Route::get('/review', [ReviewController::class, 'show'])->name('SellerReview');
+    Route::post('/review', [ReviewController::class, 'store'])->name('SellerReview.store');
 
-    Route::get("/ConfirmPage", function(){
-        return Inertia::render("ConfirmPage");
-    })->name("ConfirmPage");
+    Route::get('/ConfirmPage', [TransactionDetailController::class, 'confirm'])
+        ->name('ConfirmPage');
 
-    Route::get("/UploadEvidence", function(){
-        return Inertia::render("UploadEvidence");
-    })->name("UploadEvidence");
-});
+    });
 
+Route::get("/UploadEvidence", [App\Http\Controllers\EvidenceController::class, 'show'])->name("UploadEvidence");
+Route::post("/UploadEvidence", [App\Http\Controllers\EvidenceController::class, 'store'])->name("UploadEvidence.store");
 
 
 Route::prefix('/Seller')->middleware(['auth'])->group(function() {
@@ -101,31 +104,23 @@ Route::middleware(['auth'])->group(function () {
 
 
 
-Route::prefix('/Buyer')->group(function(){
+Route::prefix('/Buyer')->middleware(['auth', 'buyer'])->group(function(){
     Route::get('/product', function(){
         return Inertia::render('SellerProductPage', [
             "role" => "Buyer"
         ]);
     })->name('BuyerProduct');
-    Route::get('/MySchedule', function(){
-        return Inertia::render('MySchedule', [
-            "role" => "Buyer"
-        ]);
-    })->name('BuyerMySchedule');
+    Route::get('/MySchedule', [MyScheduleController::class, 'index'])->name('BuyerMySchedule');
+    Route::patch('/appointment/{appointment}/cancel', [MyScheduleController::class, 'cancelAppointment'])->name('BuyerAppointment.cancel');
+    Route::get('/appointment/{appointment}', [MyScheduleController::class, 'show'])->name('BuyerAppointment.show');
 
-    Route::get('/TransactionDetail', function(){
-        return Inertia::render('TransactionDetail', [
-            'role' => 'Buyer'
-        ]);
-    })->name('BuyerTransactionDetail');
+    Route::get('/TransactionDetail', [TransactionDetailController::class, 'index'])->name('BuyerTransactionDetail');
+    Route::post('/TransactionDetail/deal', [TransactionDetailController::class, 'dealBuyer'])->name('BuyerTransactionDeal');
     Route::get('/chat', function(){
         return Inertia::render('chat');
     })->name("BuyerChat");
-    Route::get('/review', function(){
-        return Inertia::render('review', [
-            "role" => "Buyer"
-        ]);
-    })->name('BuyerReview');
+    Route::get('/review', [ReviewController::class, 'show'])->name('BuyerReview');
+    Route::post('/review', [ReviewController::class, 'store'])->name('BuyerReview.store');
 });
 
 

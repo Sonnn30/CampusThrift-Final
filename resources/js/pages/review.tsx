@@ -1,7 +1,39 @@
 
 
-export default function Review({role}){
-    console.log(role)
+import { useState } from 'react'
+import { router, usePage } from '@inertiajs/react'
+
+export default function Review({ role, appointment_id }: any){
+    const page = usePage<any>();
+    const serverRole = page.props.role || role || 'Buyer';
+    const appointmentId = page.props.appointment_id || appointment_id;
+
+    const [rating, setRating] = useState<number>(0);
+    const [hover, setHover] = useState<number>(0);
+    const [comment, setComment] = useState<string>('');
+
+    const submitReview = () => {
+        if (rating < 1) {
+            alert('Please select a rating.');
+            return;
+        }
+        if (!appointmentId) {
+            alert('No appointment found for review. Please complete a transaction first or contact support.');
+            return;
+        }
+        const reviewRoute = serverRole === 'Seller' ? '/Seller/review' : '/Buyer/review';
+        router.post(reviewRoute, {
+            appointment_id: appointmentId,
+            rating,
+            comment,
+        }, {
+            onSuccess: () => {
+                alert('Thank you for your review!');
+            },
+            onError: () => alert('Failed to submit review.')
+        });
+    }
+
     return(
         <>
             <div className="w-full h-screen flex justify-center items-center bg-[#ECEEDF]">
@@ -11,17 +43,28 @@ export default function Review({role}){
                         <h1 className="text-[28px]">Rating</h1>
                     </div>
                     <div className="flex flex-col gap-3">
-                        <h1 className="text-[26px]">{role === "Buyer" ? (
+                        <h1 className="text-[26px]">{serverRole === "Buyer" ? (
                             "How would you rate your overall experience buying from this seller?"
                         ): (
                             "How would you rate your overall experience with this buyer?"
                         )}</h1>
-                        <div>
-                            <img src="/starG.svg" alt="" />
+                        <div className="flex gap-2 text-4xl">
+                            {[1,2,3,4,5].map((star) => (
+                                <button
+                                    key={star}
+                                    onMouseEnter={() => setHover(star)}
+                                    onMouseLeave={() => setHover(0)}
+                                    onClick={() => setRating(star)}
+                                    aria-label={`rate-${star}`}
+                                    className={(hover || rating) >= star ? 'text-yellow-400' : 'text-gray-300'}
+                                >
+                                    {(hover || rating) >= star ? '★' : '☆'}
+                                </button>
+                            ))}
                         </div>
                     </div>
                     <div className="flex flex-col gap-3">
-                        <h1 className="text-[26px]">{role === "Buyer" ? (
+                        <h1 className="text-[26px]">{serverRole === "Buyer" ? (
                             "What do you think about the product you purchased?"
                         ): (
                             "What was your experience dealing with this buyer?"
@@ -30,11 +73,13 @@ export default function Review({role}){
                             <textarea
                                 className="w-full h-40 border-2  rounded-lg p-3"
                                 placeholder="Type Here..."
-                            ></textarea>
+                                value={comment}
+                                onChange={(e) => setComment(e.target.value)}
+                            />
                         </div>
                     </div>
-                    <div className="px-15 bg-[#BBDCE5] w-[510px] h-[47px] flex justify-center items-center rounded-2xl">
-                        <button className="text-[28px]">Submit</button>
+                    <div className="px-15 bg-[#BBDCE5] w-[510px] h-[47px] flex justify-center items-center rounded-2xl cursor-pointer" onClick={submitReview}>
+                        <button className="text-[28px] cursor-pointer">Submit</button>
                     </div>
                 </div>
             </div>

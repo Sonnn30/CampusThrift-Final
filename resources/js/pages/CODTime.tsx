@@ -1,23 +1,52 @@
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
-import  Picker  from "react-mobile-picker";
+import Picker from "react-mobile-picker";
+import { router } from '@inertiajs/react';
+import CODTimeRoute from '@/routes/CODTime';
 
-export default function CODTime(){
+interface Product {
+    id: number;
+    product_name: string;
+    product_price: number;
+    description: string;
+    image?: string;
+}
+
+interface CODTimeProps {
+    product: Product;
+    selectedDate: string;
+    availableTimes: string[];
+}
+
+export default function CODTime({ product, selectedDate, availableTimes }: CODTimeProps){
     const goToNext = () => {
         if (!date) return;
-        localStorage.setItem("selectedTime", `${value.hour}:${value.minute}`);
-        window.location.href = "/COD/location";
+
+        const selectedTime = `${value.hour}:${value.minute}`;
+
+        router.post(CODTimeRoute.store.url(), {
+            time: selectedTime
+        }, {
+            onSuccess: () => {
+                window.location.href = "/COD/location";
+            },
+            onError: (errors) => {
+                console.error('Error submitting time:', errors);
+                alert("An error occurred. Please try again.");
+            }
+        });
     }
-    const goBack = () =>{
-        window.location.href = "/COD/date"
+
+    const goBack = () => {
+        router.get('/COD/date', { product_id: product.id });
     }
     const [date, setDate] = useState<Date | null>(null)
-    useEffect(()=>{
-        const stored = localStorage.getItem("selectedDate");
-        if(stored){
-            setDate(new Date(stored));
+
+    useEffect(() => {
+        if (selectedDate) {
+            setDate(new Date(selectedDate));
         }
-    }, [])
+    }, [selectedDate])
     const [value, setValue] = useState({ hour: "12", minute: "30" });
 
     return(
@@ -44,7 +73,7 @@ export default function CODTime(){
                                 <img src="/clock.png" alt="calendar" width={40} height={40}/>
                                 <p className="text-[24px]">{value.hour}:{value.minute}</p>
                             </div>
-                            <div className="flex justify-center items-center mt-40 rounded-xl ml-7 w-[491px] h-[68px] bg-[#BBDCE5] hover:cursor-pointer" onClick={goToNext}>
+                            <div className="absolute flex justify-center items-center mt-[35%] rounded-xl ml-7 w-[491px] h-[68px] bg-[#BBDCE5] hover:cursor-pointer" onClick={goToNext}>
                                 <button className="text-[32px] hover:cursor-pointer" onClick={goToNext}>Next</button>
                             </div>
                         </div>

@@ -9,30 +9,55 @@ import {
   Popup
 } from 'react-leaflet'
 import axios from "axios";
+import { router } from '@inertiajs/react';
+import CODLocationRoute from '@/routes/CODLocation';
 
+interface Product {
+    id: number;
+    product_name: string;
+    product_price: number;
+    description: string;
+    image?: string;
+}
 
-export default function CODLocation(){
+interface CODLocationProps {
+    product: Product;
+    selectedDate: string;
+    selectedTime: string;
+    availableLocations: string[];
+}
+
+export default function CODLocation({ product, selectedDate, selectedTime, availableLocations }: CODLocationProps){
     const goToNext = () => {
-        localStorage.setItem("selectedLocation", `${selectedLocation.display_name}:${selectedLocation.lat}:${selectedLocation.lon}`);
-        window.location.href = "/";
+        router.post(CODLocationRoute.store.url(), {
+            location: selectedLocation.display_name,
+            product_id: product.id,
+            date: selectedDate,
+            time: selectedTime
+        }, {
+            onError: (errors) => {
+                console.error('Error submitting appointment:', errors);
+                alert("An error occurred. Please try again.");
+            }
+        });
     }
-    const goBack = () =>{
-        window.location.href = "/COD/time"
+
+    const goBack = () => {
+        router.get('/COD/time');
     }
     const [date, setDate] = useState<Date | null>(null);
     const [time, setTime] = useState({hour: "12", minute: "30"});
-    useEffect(()=>{
-        const storedDate = localStorage.getItem("selectedDate");
-        const storedTime = localStorage.getItem("selectedTime");
-        if (storedDate) {
-            setDate(new Date(storedDate));
+
+    useEffect(() => {
+        if (selectedDate) {
+            setDate(new Date(selectedDate));
         }
 
-        if (storedTime) {
-            const [hour, minute] = storedTime.split(":");
+        if (selectedTime) {
+            const [hour, minute] = selectedTime.split(":");
             setTime({ hour, minute });
         }
-    }, [])
+    }, [selectedDate, selectedTime])
 
 
     const [searchQuery, setSearchQuery] = useState("");
@@ -46,9 +71,9 @@ export default function CODLocation(){
     const mapRef = useRef(null);
 
     // Fungsi update peta saat lokasi berubah
-    const updateMap = (lat, lon) => {
+    const updateMap = (lat: number, lon: number) => {
         if (mapRef.current) {
-            mapRef.current.setView([lat, lon], 15);
+            (mapRef.current as any).setView([lat, lon], 15);
         }
     };
 
@@ -80,7 +105,7 @@ export default function CODLocation(){
 
 
     // Saat user klik rekomendasi
-    const handleSelectSuggestion = (suggestion) => {
+    const handleSelectSuggestion = (suggestion: any) => {
         const { lat, lon, display_name } = suggestion;
         setSelectedLocation({ lat, lon, display_name });
         setSearchQuery(display_name);
@@ -92,7 +117,7 @@ export default function CODLocation(){
         updateMap(lat, lon);
     };
 
-    function FlyToMarker({ position }) {
+    function FlyToMarker({ position }: { position: any }) {
     const map = useMap();
 
     useEffect(() => {
@@ -112,7 +137,7 @@ export default function CODLocation(){
                 <h2 className="text-[40px]">COD</h2>
                 <h1 className="text-[54px]">Select your locations</h1>
             </div>
-            <div className="flex justify-center items-stretch w-[1217px] h-[902px] divide-x-4  divide-[#BBDCE5] border-4 border-[#BBDCE5]">
+            <div className="flex justify-center items-stretch w-[1217px] h-[880px] divide-x-4  divide-[#BBDCE5] border-4 border-[#BBDCE5]">
                 <div className="flex-1 flex justify-start items-start">
                     <div className="flex flex-col justify-between items-start gap-8">
                         <div className="">
@@ -133,7 +158,7 @@ export default function CODLocation(){
                                 <img src="/map.png" alt="calendar" className="absoulute w-[40px] h-[40px]"/>
                                 <p className="text-[24px]">{selectedLocation.display_name}</p>
                         </div>
-                        <div className="relative mt-[40%] ml-7 w-[491px] h-[68px] bg-[#BBDCE5] rounded-xl">
+                        <div className="absolute mt-[46%] ml-7 w-[491px] h-[68px] bg-[#BBDCE5] rounded-xl">
                         <button
                             className="absolute inset-0 text-[32px] hover:cursor-pointer"
                             onClick={goToNext}
@@ -154,8 +179,10 @@ export default function CODLocation(){
                                 <img src="/lock.png" alt="lock" className="w-[25px] h-[25px]"/>
                                 <p>Safe COD Location Recommendations:</p>
                             </div>
-                            <p>- Campus Kemanggisan</p>
-                            <p>- Campus Syahdan</p>
+                                <>
+                                    <p>- Campus Kemanggisan</p>
+                                    <p>- Campus Syahdan</p>
+                                </>
                         </div>
                     <div className="flex flex-col justify-center items-center -mt-20 w-full h-full gap-5 z-100">
                         <div className="relative w-[600px]">
@@ -168,7 +195,7 @@ export default function CODLocation(){
                         />
                         {suggestions.length > 0 && (
                         <ul className="absolute z-10 bg-white border w-full mt-1 max-h-60 overflow-y-auto">
-                            {suggestions.map((s) => (
+                            {suggestions.map((s: any) => (
                             <li
                                 key={s.place_id}
                                 onClick={() => handleSelectSuggestion(s)}
@@ -182,14 +209,10 @@ export default function CODLocation(){
                     </div>
                     <div className="z-0">
                         <MapContainer
-                        center={[-6.200000, 106.816666]}
-                        zoom={13}
-                        scrollWheelZoom={true}
-                        style={{ height: "400px", width: "600px" }}
+                        {...({ center: [-6.200000, 106.816666], zoom: 13, scrollWheelZoom: true, style: { height: "400px", width: "600px" } } as any)}
                         >
                         <TileLayer
-                            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                            attribution="&copy; OpenStreetMap contributors"
+                            {...({ url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", attribution: "&copy; OpenStreetMap contributors" } as any)}
                         />
                         <Marker position={[selectedLocation.lat, selectedLocation.lon]}>
                             <Popup>{selectedLocation.display_name}</Popup>

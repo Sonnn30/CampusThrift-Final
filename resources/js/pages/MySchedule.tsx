@@ -3,25 +3,58 @@ import { format, addMonths, subMonths } from "date-fns";
 import { DayPicker } from "react-day-picker";
 import Month from "./Month";
 import dayjs from "dayjs";
+import { router } from "@inertiajs/react";
 
-export default function MySchedule({role}) {
-    const [selected, setSelected] = useState(dayjs());
-    const [daysInWeek, setDaysInWeek] = useState([]);
+export default function MySchedule({role, appointments, events}: any) {
+    // Read ?date=YYYY-MM-DD from URL to focus calendar week after redirect
+    const urlParams = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
+    const initialDateParam = urlParams.get('date');
+
+    const [selected, setSelected] = useState(dayjs(initialDateParam || undefined));
+    const [daysInWeek, setDaysInWeek] = useState<any[]>([]);
     const [currMonth, setCurrMonth] = useState(new Date());
+    const [showAllAppointments, setShowAllAppointments] = useState(false);
 
     useEffect(() => {
         const savedRole = localStorage.getItem("role");
     }, []);
 
-    const events = [
-    { id: 1, title: "COD BarangX", date: "2025-08-05", time: "10:00", color: "bg-blue-200" },
-    { id: 2, title: "COD BarangY", date: "2025-10-05", time: "01:00", color: "bg-blue-200" },
-    { id: 3, title: "COD BarangZ", date: "2025-10-10", time: "11:00", color: "bg-red-300" },
-    ];
+    // Handle appointment status update for sellers
+    const handleStatusUpdate = (appointmentId: any, status: any) => {
+        router.patch(`/Seller/appointment/${appointmentId}/status`, {
+            status: status
+        }, {
+            onSuccess: () => {
+                alert(`Appointment ${status} successfully!`);
+                window.location.reload();
+            },
+            onError: (errors) => {
+                console.error('Error updating appointment:', errors);
+                alert("An error occurred. Please try again.");
+            }
+        });
+    };
 
-    const eventDates = events.map((e) => new Date(e.date));
+    // Use events from backend, fallback to empty array if not provided
+    const backendEvents = events || [];
+
+    // Limit displayed appointments to 3 unless showAllAppointments is true
+    const displayedEvents = showAllAppointments ? backendEvents : backendEvents.slice(0, 3);
+
+    // Create separate arrays for different appointment statuses
+    const pendingDates = backendEvents
+        .filter((e: any) => e.status === 'pending')
+        .map((e: any) => new Date(e.date));
+
+    const confirmedDates = backendEvents
+        .filter((e: any) => e.status === 'confirmed')
+        .map((e: any) => new Date(e.date));
+
+    const rejectedDates = backendEvents
+        .filter((e: any) => e.status === 'rejected')
+        .map((e: any) => new Date(e.date));
     useEffect(() => {
-    const startOfWeek = dayjs(selected).startOf("isoWeek");
+    const startOfWeek = dayjs(selected).startOf("week");
     const newDays = Array.from({ length: 7 }, (_, i) => startOfWeek.add(i, "day"));
     setDaysInWeek(newDays);
     }, [selected]);
@@ -33,7 +66,7 @@ export default function MySchedule({role}) {
     <div className="w-full h-full bg-[#ECEEDF]">
       <div className="flex justify-between">
         {/* LEFT PANEL */}
-        <div className="flex-1 flex flex-col justify-center items-start border-r-3 border-[#BBDCE5]">
+        <div className="flex-1 flex flex-col items-start border-r-3 border-[#BBDCE5] ">
           {/* Header */}
           <div className="flex justify-center items-center w-full h-[500px]">
             <div className="flex flex-col justify-between items-center w-full h-[500px]">
@@ -78,15 +111,19 @@ export default function MySchedule({role}) {
                   }}
                   modifiers={{
                     today: new Date(),
-                    hasEvent: eventDates,
+                    pendingEvent: pendingDates,
+                    confirmedEvent: confirmedDates,
+                    rejectedEvent: rejectedDates,
                   }}
                   modifiersClassNames={{
                     today: "scale-x-62 scale-y-72 bg-blue-400 text-white rounded-full",
-                    hasEvent: "scale-x-62 scale-y-72 bg-blue-200 text-black rounded-full",
+                    pendingEvent: "scale-x-62 scale-y-72 bg-gray-400 text-white rounded-full",
+                    confirmedEvent: "scale-x-62 scale-y-72 bg-green-500 text-white rounded-full",
+                    rejectedEvent: "scale-x-62 scale-y-72 bg-red-500 text-white rounded-full",
                   }}
                   classNames={{
                     day_button:
-                      "flex justify-center items-center p-4 w-[20px] h-[20px] hover:bg-[#BBDCE5] rounded-full hover:cursor-pointer transition-all duration-150",
+                      "flex justify-center items-center p-4 w-[30px] h-[30px] hover:bg-[#BBDCE5] rounded-full hover:cursor-pointer transition-all duration-150",
                     root: "flex justify-center items-center text-[20px] w-full h-full",
                     nav: "hidden",
                     caption_label: "hidden",
@@ -102,37 +139,68 @@ export default function MySchedule({role}) {
             <h1 className="text-[24px]">Appointment List</h1>
           </div>
 
-          {events.map((e) => (
+          {displayedEvents.map((e: any) => (
             <div
               key={e.id}
-              className="flex justify-start items-center px-10 gap-5 border-b-3 border-[#BBDCE5] w-full h-[100px]"
+              className="flex justify-start items-center px-10  border-b-3 border-[#BBDCE5] w-full h-[100px]"
             >
-              <div className="flex justify-between items-center gap-3 w-full">
-                <div>
+              <div className="flex justify-between items-center gap-10 w-full">
+                <div className="flex flex-col items-start justify-center gap-1">
                   <img src="/user.png" alt="user" className="w-[45px] h-[45px]" />
+                  {e.buyer_name && role === "Seller" && (
+                    <p className="text-[14px] font-bold">{e.buyer_name}</p>
+                  )}
                 </div>
-                <div className="flex flex-col">
-                  <h2 className="text-[20px]">
-                    <a href={`/${role}/TransactionDetail`}>{e.title}</a>
+                <div className="flex flex-col w-[300px]">
+                  <h2 className="text-[22px]">
+                    <a href={`/${role}/TransactionDetail?appointment_id=${e.id}`}>{e.title}</a>
                   </h2>
-                  <p className="text-[16px]">{format(new Date(e.date), "EEE, MM/dd/yyyy")}</p>
+                  <p className="text-[20px]">{format(new Date(e.date), "EEE, MM/dd/yyyy")}</p>
+
                 </div>
-                <div className="flex flex-col ml-20 gap-1">
+                <div className="flex flex-col gap-2">
                   <div className="flex justify-between items-center gap-2">
                     <img src="/clock.png" alt="clock" className="w-[25px] h-[25px]" />
-                    <p className="text-[20px]">{e.time}</p>
+                    <p className="text-[25px]">{e.time}</p>
                   </div>
                   <div className="flex justify-end">
                     {role === "Buyer" ? (
-                      <p>Rejected</p>
+                      <div className="flex flex-col items-end gap-1">
+                        <span className={`flex justify-center items-center rounded text-[16px] w-[100px] h-[30px] font-bold ${
+                          e.status === 'confirmed' ? 'bg-green-200 text-green-800' :
+                          e.status === 'rejected' ? 'bg-red-200 text-red-800' :
+                          e.status === 'completed' ? 'bg-blue-200 text-blue-800' :
+                          'bg-yellow-200 text-yellow-800'
+                        }`}>
+                          {e.status ? e.status.charAt(0).toUpperCase() + e.status.slice(1) : 'Pending'}
+                        </span>
+                      </div>
                     ) : (
                       <div className="flex justify-between gap-2">
-                        <div className="bg-[#68B143] w-[28px] h-[28px] flex justify-center items-center rounded-lg cursor-pointer">
-                          <img src="/check.png" alt="check" className="w-[18px] h-[18px]" />
-                        </div>
-                        <div className="bg-[#F64848] w-[28px] h-[28px] flex justify-center items-center rounded-lg cursor-pointer">
-                          <img src="/cross.png" alt="cross" className="w-[16px] h-[16px]" />
-                        </div>
+                        {e.status === 'pending' ? (
+                          <>
+                            <div
+                              className="bg-[#68B143] w-[28px] h-[28px] flex justify-center items-center rounded-lg cursor-pointer"
+                              onClick={() => handleStatusUpdate(e.id, 'confirmed')}
+                            >
+                              <img src="/check.png" alt="check" className="w-[18px] h-[18px]" />
+                            </div>
+                            <div
+                              className="bg-[#F64848] w-[28px] h-[28px] flex justify-center items-center rounded-lg cursor-pointer"
+                              onClick={() => handleStatusUpdate(e.id, 'rejected')}
+                            >
+                              <img src="/cross.png" alt="cross" className="w-[16px] h-[16px]" />
+                            </div>
+                          </>
+                        ) : (
+                          <span className={`flex justify-center items-center rounded text-[16px] w-[100px] h-[30px] font-bold ${
+                            e.status === 'confirmed' ? 'bg-green-200 text-green-800' :
+                            e.status === 'completed' ? 'bg-blue-200 text-blue-800' :
+                            'bg-red-200 text-red-800'
+                          }`}>
+                            {e.status ? e.status.charAt(0).toUpperCase() + e.status.slice(1) : 'Pending'}
+                          </span>
+                        )}
                       </div>
                     )}
                   </div>
@@ -141,21 +209,28 @@ export default function MySchedule({role}) {
             </div>
           ))}
 
-          <div className="flex justify-center items-center w-full py-5 cursor-pointer">
-            <div className="flex justify-center items-center w-[280px] h-[50px] bg-[#BBDCE5] rounded-xl">
-              <button className="text-[20px] font-bold cursor-pointer">View All</button>
+          {backendEvents.length > 3 && (
+            <div className="flex justify-center items-center w-full py-5 cursor-pointer">
+              <div
+                className="flex justify-center items-center w-[280px] h-[50px] bg-[#BBDCE5] rounded-xl hover:bg-[#9FCAD8] transition-colors duration-200"
+                onClick={() => setShowAllAppointments(!showAllAppointments)}
+              >
+                <button className="text-[20px] font-bold cursor-pointer">
+                  {showAllAppointments ? 'Show Less' : 'View All'}
+                </button>
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* RIGHT PANEL */}
-        <div className="flex-[2]">
+        <div className="flex-[2] ">
           <React.Fragment>
             <div className="flex justify-start items-center px-10 py-10 text-[28px]">
               {format(currMonth, "MMMM yyyy")}
             </div>
             <div className="flex flex-col h-[870px]">
-              <Month daysInWeek={daysInWeek} events={events} />
+              <Month daysInWeek={daysInWeek} events={backendEvents} role={role} />
             </div>
           </React.Fragment>
         </div>

@@ -5,12 +5,36 @@ import { Inertia } from "@inertiajs/inertia";
 
 export default function ProductDetail() {
   const { props } = usePage();
-  const { role = "Buyer", product = {}, otherProducts = [] } = props;
+  const { role = "Buyer", product: productRaw, otherProducts = [] } = props;
+  const product: ProductType = productRaw as ProductType;
 
   // Ambil maksimal 5 gambar dari backend
   const images = Array.isArray(product?.images)
     ? product.images.slice(0, 5)
     : ["/placeholder.jpg"];
+
+    type ReviewType = {
+      buyer: string;
+      date: string;
+      text: string;
+      rating: number;
+    };
+
+    type ProductType = {
+      id: number;
+      name: string;
+      price: number;
+      description: string[];
+      images: string[];
+      shipping: {
+        method: string[];
+        seller: string;
+        location: string;
+        reviews: number;
+        ratings: number;
+      };
+      reviews: ReviewType[];
+    };
 
   // Default image
   const [selectedImage, setSelectedImage] = useState(images[0] || "/placeholder.jpg");
@@ -25,7 +49,13 @@ export default function ProductDetail() {
       Inertia.visit(`/Seller/product/edit/${product.id}`);
     }
   }
-
+    function goToMakeAppointment() {
+        if (role === "Buyer") {
+            window.location.href = `/COD/date?product_id=${product.id}`;
+        } else {
+            alert("Just Buyer Can Make Appointment! Please Log In With Buyer Role");
+        }
+    }
   return (
     <div className="flex flex-col justify-center items-center mx-auto px-6 py-10 space-y-10 bg-[#ECEEDF]">
       {/* Product Detail Section */}
@@ -91,7 +121,7 @@ export default function ProductDetail() {
           {/* Shipping Information */}
           <div className="flex flex-col mb-6 -mt-2">
             <h2 className="font-semibold mb-2">Shipping Information</h2>
-            <div className="flex flex-col text-sm text-gray-700 w-full max-w-[400px] min-w-50">
+            <div className="flex flex-col text-sm text-gray-700 w-full max-w-[500px] min-w-50">
               {/* Shipping Methods */}
               <div className="mb-3 flex border rounded-lg overflow-hidden divide-x h-[66px]">
                 {Array.isArray(product?.shipping?.method) &&
@@ -137,7 +167,7 @@ export default function ProductDetail() {
                     <span className="text-yellow-500">⭐</span>
                     <span className="text-gray-800 text-sm">
                       ({product?.shipping?.ratings ?? 0}){" "}
-                      {product?.shipping?.reviews ?? 0}K Reviews
+                      {product?.shipping?.reviews ?? 0} Reviews
                     </span>
                   </div>
                 </div>
@@ -155,8 +185,34 @@ export default function ProductDetail() {
               </div>
             </div>
           </div>
+          <div className="w-full border-2 rounded-lg h-[60px] flex items-center justify-center bg-[##ECEEDF] text-[32px] cursor-pointer hover:bg-[#e4e3dd]" onClick={goToMakeAppointment}>
+            <button className="cursor-pointer" onClick={goToMakeAppointment}>Make Appointment</button>
+          </div>
         </div>
       </div>
+        {/* Reviews */}
+        <div className="flex flex-col px-5 justify-start w-full">
+            <h2 className="text-xl font-bold mb-4">Reviews</h2>
+            <div className="flex gap-4 overflow-x-auto">
+              {Array.isArray(product?.reviews) && product.reviews.length > 0 ? (
+                  product.reviews.map((rev: ReviewType, i: number) => (
+                  <div key={i} className="border rounded-lg p-4 bg-white shadow w-64 flex-shrink-0">
+                    <div className="flex justify-between mb-2">
+                      <span className="font-semibold">{rev.buyer}</span>
+                      <span className="text-gray-500 text-sm">{rev.date}</span>
+                    </div>
+                    <p className="text-gray-700 text-sm mb-2">{rev.text}</p>
+                    <div className="flex items-center gap-1">
+                      <span className="text-yellow-500">{'⭐'.repeat(rev.rating)}</span>
+                      <span className="text-gray-500 text-xs">{rev.rating}/5</span>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p className="text-gray-500">No reviews available yet.</p>
+              )}
+            </div>
+        </div>
 
       {/* Another Items */}
       <div className="w-full px-6 py-4">

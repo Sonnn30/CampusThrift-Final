@@ -99,14 +99,14 @@ export default function ProductCatalogNavbar({user, role, isLoggedIn}) {
                             </div>
                             {ishidden && (
                                 <div className='absolute flex flex-col items-end justify-center mt-10 bg-white '>
+                                    <div className=' bg-white border-2 w-[120px] flex items-center justify-end px-5 cursor-pointer' onClick={goToProfile}>
+                                        <button onClick={goToProfile} className='cursor-pointer'>MyProfile</button>
+                                    </div>
                                     {role === "Seller" ? (
                                         <div className=' bg-white border-2 w-[120px] flex items-center justify-end px-5 cursor-pointer' onClick={goToMyStore}>
                                             <button onClick={goToMyStore} className='cursor-pointer'>My Store</button>
                                         </div>
                                     ): ('')}
-                                    <div className=' bg-white border-2 w-[120px] flex items-center justify-end px-5 cursor-pointer' onClick={goToProfile}>
-                                        <button onClick={goToProfile} className='cursor-pointer'>MyProfile</button>
-                                    </div>
                                     <div className=' bg-white border-2 w-[120px] flex items-center justify-end px-5 cursor-pointer' onClick={handleLogout}>
                                         <button onClick={handleLogout} className='cursor-pointer'>Log Out</button>
                                     </div>

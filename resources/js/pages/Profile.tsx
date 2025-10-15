@@ -66,7 +66,7 @@ export default function Profile({role , profile}){
                             <h1 className="text-[36px]">{user?.name}</h1>
                             <p className="text-[24px]">
                                 {isHidden ? (
-                                    <input type="text"
+                                    <input type="text" placeholder="Angkatan"
                                         value={data.angkatan}
                                         onChange={(e) => setData("angkatan", e.target.value)}
                                         className="border rounded-lg p-2"
@@ -185,10 +185,10 @@ export default function Profile({role , profile}){
                     </div>
                     ) : (
                         <>
-                            <div className="w-[670px] h-[75px] bg-[#8CF375] flex justify-center items-center text-[32px] rounded-3xl cursor-pointer" onClick={()=> setCompleted(!completed)}>
+                            <div className="w-[670px] h-[75px] bg-[#8CF375] flex justify-center items-center text-[32px] rounded-3xl cursor-pointer border-2" onClick={()=> setCompleted(!completed)}>
                                 <button onClick={() => setCompleted(!completed)} className="cursor-pointer">Completed Transaction</button>
                             </div>
-                            <div className="w-[670px] h-[75px] bg-[#F64848] flex justify-center items-center text-[32px] rounded-3xl cursor-pointer" onClick={()=> setReported(!reported)}>
+                            <div className="w-[670px] h-[75px] bg-[#F64848] flex justify-center items-center text-[32px] rounded-3xl cursor-pointer border-2" onClick={()=> setReported(!reported)}>
                                 <button onClick={() => setReported(!reported)} className="cursor-pointer">Report Seller</button>
                             </div>
                         </>

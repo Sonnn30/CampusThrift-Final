@@ -8,14 +8,14 @@ export default function ProductCard_ProductGrid({ role, product }) {
 
     function goToMakeAppointment() {
         if (role === "Buyer") {
-            window.location.href = `/COD/date`;
+            window.location.href = `/COD/date?product_id=${product.id}`;
         } else {
             alert("Just Buyer Can Make Appointment! Please Log In With Buyer Role");
         }
     }
 
     return (
-        <div className="flex flex-col gap-4 w-[350px] rounded-2xl border border-neutral-200 bg-neutral-100 p-5 shadow-sm transition-transform duration-200 ease-in-out hover:scale-[1.01] hover:shadow-[0_8px_20px_rgba(255,0,0,0.18)] cursor-pointer">
+        <div className="flex flex-col gap-4 w-[350px] rounded-2xl border border-neutral-200 bg-neutral-100 p-5 shadow-sm transition-transform duration-200 ease-in-out hover:scale-[1.01] hover:shadow-[0_8px_20px_rgba(0,180,255,0.18)] cursor-pointer">
             {/* IMAGE */}
             <div className="w-full h-full flex flex-col justify-center items-center z-0" onClick={goToProductDetail}>
                 <div className="mb-4 flex h-[200px] items-center justify-center max-[800px]:h-[160px] max-[575px]:h-[140px]">

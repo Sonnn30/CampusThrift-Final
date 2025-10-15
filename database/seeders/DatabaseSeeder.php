@@ -22,7 +22,11 @@ class DatabaseSeeder extends Seeder
                 'name' => 'Test User',
                 'password' => Hash::make('password'),
                 'email_verified_at' => now(),
+                'role' => 'Buyer',
             ]
         );
+
+        // Seed appointments if you want sample data
+        $this->call(AppointmentSeeder::class);
     }
 }

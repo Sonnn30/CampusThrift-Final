@@ -3,7 +3,7 @@ import { useState } from "react";
 export default function ProductCardNavbar() {
   const [active, setActive] = useState("Best Seller");
 
-  const tabs = ["Best Seller", "New Added", "Like New"];
+  const tabs = ["Best Seller", "Low Price", "High Price"];
 
   return (
     <div className="flex gap-2 px-10 py-5">

@@ -36,6 +36,9 @@ class Product extends Model
         return $this->belongsTo(User::class);
     }
 
-    // Accessor untuk ambil gambar pertama langsung (biar enak dipanggil di blade/inertia)
-    // NOTE: setShippingMethodAttribute dihapus karena $casts sudah cukup
+    // Relasi ke Appointment
+    public function appointments()
+    {
+        return $this->hasMany(Appointment::class, 'product_id');
+    }
 }

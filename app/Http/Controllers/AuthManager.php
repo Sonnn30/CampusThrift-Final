@@ -7,6 +7,7 @@ use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 use App\Models\Product;
+use Illuminate\Support\Facades\Log;
 
 class AuthManager extends Controller
 {
@@ -29,6 +30,7 @@ public function UserDashboard()
 {
     $user = Auth::user();
     $isLoggedIn = Auth::check();
+
 
     // Ambil semua produk
     $products = Product::with('media', 'user')
@@ -66,6 +68,7 @@ public function UserDashboard()
         $credentials = $request->only('email', 'password');
         if(Auth::attempt($credentials)){
             $request->session()->regenerate();
+
 
             // redirect sesuai role
             if($request->role === 'Buyer'){

@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use App\Models\Product;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use App\Models\Review;
 use Plank\Mediable\Facades\MediaUploader;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
@@ -101,7 +103,7 @@ public function edit(Product $product)
     ]);
 
     $product = Product::create([
-        'user_id'         => auth()->id(),
+        'user_id'         => Auth::id(),
         'product_name'    => $request->product_name,
         'product_price'   => $request->product_price,
         'description'     => $request->description,
@@ -123,7 +125,7 @@ public function edit(Product $product)
             }
         }
     }
-        \Log::info('Files received:', [
+        Log::info('Files received:', [
         'has_images' => $request->hasFile('images'),
         'image_count' => $request->hasFile('images') ? count($request->file('images')) : 0,
     ]);
@@ -200,9 +202,44 @@ public function show($id)
     $images = $product->getMedia('product_images');
     $imageUrls = $images->isNotEmpty()
         ? $images->map(fn($m) => $m->getUrl())
-        : [asset('images/default_product.png')]; // <-- CHANGE HERE
+        : [asset('images/default_product.png')];
 
-    // Make sure you have an image at /public/images/default_product.png
+    // Fetch other products from the same seller (exclude current product)
+    $otherProducts = Product::with('media')
+        ->where('user_id', $product->user_id)
+        ->where('id', '!=', $product->id)
+        ->latest()
+        ->take(8)
+        ->get()
+        ->map(function ($p) {
+            return [
+                'id' => $p->id,
+                'product_name' => $p->product_name,
+                'product_price' => $p->product_price,
+                'images' => $p->getMedia('product_images')->map(fn($m) => $m->getUrl()),
+            ];
+        });
+
+    // Compute seller rating (average) and total number of reviews
+    $sellerId = $product->user_id;
+    $ratingAvg = round((float) Review::where('reviewee_id', $sellerId)->avg('rating'), 1);
+    $ratingCount = (int) Review::where('reviewee_id', $sellerId)->count('id');
+
+    // Ambil semua appointment untuk produk ini
+    $appointments = $product->appointments()->pluck('id');
+    // Ambil semua review dari appointment terkait
+    $reviews = Review::whereIn('appointment_id', $appointments)
+        ->with(['reviewer'])
+        ->latest()
+        ->get()
+        ->map(function ($rev) {
+            return [
+                'buyer' => $rev->reviewer->name ?? 'Unknown',
+                'date' => $rev->created_at ? $rev->created_at->format('d M Y') : '',
+                'text' => $rev->comment ?? '',
+                'rating' => $rev->rating,
+            ];
+        });
 
     return Inertia::render('ProductDetail', [
         'role' => Auth::user()->role ?? 'Guest',
@@ -211,17 +248,19 @@ public function show($id)
             'name' => $product->product_name,
             'price' => $product->product_price,
             'description' => explode("\n", $product->description ?? ''),
-            'images' => $imageUrls, // <-- USE THE NEW VARIABLE
+            'images' => $imageUrls,
             'shipping' => [
                 'method' => is_array($product->shipping_method)
                     ? $product->shipping_method
                     : explode(',', $product->shipping_method ?? ''),
                 'seller' => $product->user->name ?? 'Unknown Seller',
                 'location' => $product->location ?? 'Unknown Location',
-                'reviews' => 1.2,
-                'ratings' => 4.8,
+                'reviews' => $ratingCount,
+                'ratings' => $ratingAvg,
             ],
+            'reviews' => $reviews,
         ],
+        'otherProducts' => $otherProducts,
     ]);
 }
 
