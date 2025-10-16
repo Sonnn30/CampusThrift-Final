@@ -3,7 +3,13 @@ export default function ProductCard_ProductGrid({ role, product }) {
         window.location.href = `/${role}/ProductDetail/${product.id}`;
     }
     function goToChat() {
-        window.location.href = `/${role}/chat`;
+        // Chat dengan seller dari product ini
+        const sellerId = product.user_id || product.seller_id;
+        if (sellerId) {
+            window.location.href = `/${role}/chat/${sellerId}`;
+        } else {
+            alert("Seller information not available");
+        }
     }
 
     function goToMakeAppointment() {

@@ -3,6 +3,18 @@ import { useForm } from "@inertiajs/react";
 import { usePage } from "@inertiajs/react";
 import axios from 'axios';
 
+interface Transaction {
+    date: string;
+    buyer: string;
+    buyer_id: number;
+    seller_id: number;
+    method: string;
+    id: string;
+    amount: string;
+    success: boolean;
+    appointment_id?: number;
+}
+
 export default function Profile({role , profile}){
     const [completed, setCompleted] = useState(false)
     const [reported, setReported] = useState(false)
@@ -15,12 +27,69 @@ export default function Profile({role , profile}){
     const [selected7, setSelected7] = useState(false)
     const [selected8, setSelected8] = useState(false)
     const [isHidden, setIsHidden] = useState(false)
-    const { props } = usePage();
+    const [reportedUserId, setReportedUserId] = useState<number | null>(null)
+    const [appointmentId, setAppointmentId] = useState<number | null>(null)
+
+    const { props } = usePage<{
+        role: string;
+        profile: any;
+        user: any;
+        completedTransactions: Transaction[];
+    }>();
+
     const user = props.auth?.user;
+    const completedTransactions = props.completedTransactions || [];
+
     console.log(role)
-    function goToChat() {
-        window.location.href = `/${role}/chat`
-    }
+    console.log('Completed Transactions:', completedTransactions);
+
+    const handleReportSubmit = async () => {
+        const reasons = [];
+        if (selected) reasons.push("Buyer didn't show up");
+        if (selected2) reasons.push("Buyer asked to lower the price too much");
+        if (selected3) reasons.push("Buyer changed meeting time/place suddenly");
+        if (selected4) reasons.push("Safety concerns about the buyer");
+        if (selected5) reasons.push("Buyer check too many but not serious");
+        if (selected6) reasons.push("Buyer seemed suspicious");
+        if (selected7) reasons.push("Buyer didn't follow the agreed COD location");
+        if (selected8) reasons.push("Buyer didn't agree with product condition");
+
+        if (reasons.length === 0) {
+            alert("Please select at least one reason");
+            return;
+        }
+
+        if (!reportedUserId) {
+            alert("User information not available");
+            return;
+        }
+
+        try {
+            const response = await axios.post(`/Profile/${role}/report`, {
+                reported_id: reportedUserId,
+                appointment_id: appointmentId,
+                reasons: reasons,
+                additional_notes: ""
+            });
+
+            console.log('Report submitted:', response.data);
+            alert('Report submitted successfully!');
+            setReported(false);
+
+            // Reset selections
+            setSelected(false);
+            setSelected2(false);
+            setSelected3(false);
+            setSelected4(false);
+            setSelected5(false);
+            setSelected6(false);
+            setSelected7(false);
+            setSelected8(false);
+        } catch (error) {
+            console.error('Error submitting report:', error);
+            alert('Failed to submit report');
+        }
+    };
 
     const { data, setData, post, processing, errors } = useForm({
         firstname: profile?.firstname || "",
@@ -48,28 +117,30 @@ export default function Profile({role , profile}){
 
     return(
         <>
-            <div className="flex flex-col items-center justify-center gap-10 w-full h-full py-10">
-                <div className="flex justify-between items-center w-full px-25">
-                    <h1 className="text-[38px] font-semibold">{role} Profile</h1>
+            <div className="flex flex-col items-center justify-center gap-6 sm:gap-8 lg:gap-10 w-full min-h-screen py-6 sm:py-8 lg:py-10 px-4 sm:px-6 lg:px-8 bg-gray-50">
+                {/* Header */}
+                <div className="flex justify-between items-center w-full max-w-[1350px]">
+                    <h1 className="text-2xl sm:text-3xl lg:text-[38px] font-semibold">{role} Profile</h1>
                     <img
                         src="/editblack.png"
                         alt="edit"
-                        className="w-[40px] h-[40px] cursor-pointer"
+                        className="w-8 h-8 sm:w-10 sm:h-10 lg:w-[40px] lg:h-[40px] cursor-pointer hover:opacity-70 transition-opacity"
                         onClick={() => setIsHidden(!isHidden)}
                     />
                 </div>
 
-                <div className="flex justify-between items-center w-[1350px] h-[161px] shadow-2xl rounded-2xl px-10">
-                    <div className="flex justify-between items-center gap-5">
-                        <img src="/user.png" alt="user"  className="w-[123px] h-[123px]"/>
-                        <div className="flex flex-col gap-1">
-                            <h1 className="text-[36px]">{user?.name}</h1>
-                            <p className="text-[24px]">
+                {/* User Info Card */}
+                <div className="flex flex-col sm:flex-row justify-between items-center w-full max-w-[1350px] min-h-[140px] sm:min-h-[161px] shadow-2xl rounded-2xl px-6 sm:px-8 lg:px-10 py-6 sm:py-4 bg-white gap-4 sm:gap-0">
+                    <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-5">
+                        <img src="/user.png" alt="user" className="w-20 h-20 sm:w-28 sm:h-28 lg:w-[123px] lg:h-[123px] rounded-full border-4 border-gray-200"/>
+                        <div className="flex flex-col gap-1 text-center sm:text-left">
+                            <h1 className="text-2xl sm:text-3xl lg:text-[36px] font-bold">{user?.name}</h1>
+                            <p className="text-lg sm:text-xl lg:text-[24px] text-gray-600">
                                 {isHidden ? (
                                     <input type="text" placeholder="Angkatan"
                                         value={data.angkatan}
                                         onChange={(e) => setData("angkatan", e.target.value)}
-                                        className="border rounded-lg p-2"
+                                        className="border-2 border-gray-300 rounded-lg p-2 w-full sm:w-auto text-base sm:text-lg focus:border-blue-500 focus:outline-none"
                                     />
                                 ): (
                                     <span>{data.angkatan}</span>
@@ -77,268 +148,468 @@ export default function Profile({role , profile}){
                             </p>
                         </div>
                     </div>
-                    <img src="/chat2.png" alt="chat2" className="w-[82px] h-[82px] cursor-pointer" onClick={goToChat}/>
                 </div>
-                <div className="flex flex-col gap-1 w-[1350px] h-[507px] shadow-2xl rounded-2xl px-10">
-                    <div className="flex justify-start p-10">
-                        <h1 className="text-[38px]">Personal Information</h1>
+
+                {/* Personal Information Card */}
+                <div className="flex flex-col gap-4 w-full max-w-[1350px] shadow-2xl rounded-2xl px-6 sm:px-8 lg:px-10 py-6 sm:py-8 bg-white">
+                    <div className="flex justify-start">
+                        <h1 className="text-2xl sm:text-3xl lg:text-[38px] font-bold">Personal Information</h1>
                     </div>
-                    <form onSubmit={handleSubmit} className="flex gap-80 items-center py-10 px-15">
-                        <div className="flex flex-col gap-20 text-[24px]">
-                            <div className="flex flex-col gap-1">
-                                <p className="text-[#2A6C86]">First name</p>
+                    <form onSubmit={handleSubmit} className="flex flex-col lg:flex-row gap-8 lg:gap-20 xl:gap-80 py-4 sm:py-6 lg:py-10">
+                        {/* Left Column */}
+                        <div className="flex flex-col gap-8 sm:gap-12 lg:gap-20 text-base sm:text-xl lg:text-[24px] flex-1">
+                            <div className="flex flex-col gap-2">
+                                <p className="text-[#2A6C86] font-semibold">First name</p>
                                 {isHidden ? (
                                     <input type="text"
                                         value={data.firstname}
                                         onChange={(e) => setData("firstname", e.target.value)}
-                                        className="border rounded-lg p-2"
+                                        className="border-2 border-gray-300 rounded-lg p-3 text-base sm:text-lg focus:border-blue-500 focus:outline-none"
                                     />
                                 ): (
-                                    <p>{data.firstname}</p>
+                                    <p className="text-gray-700">{data.firstname}</p>
                                 )}
                             </div>
-                            <div className="flex flex-col gap-1">
-                                <p className="text-[#2A6C86]">Email address</p>
+                            <div className="flex flex-col gap-2">
+                                <p className="text-[#2A6C86] font-semibold">Email address</p>
                                 {isHidden ? (
                                     <input type="text"
                                         value={data.email}
                                         onChange={(e) => setData("email", e.target.value)}
-                                        className="border rounded-lg p-2"
+                                        className="border-2 border-gray-300 rounded-lg p-3 text-base sm:text-lg focus:border-blue-500 focus:outline-none"
                                     />
                                 ): (
-                                    <p>{data.email}</p>
+                                    <p className="text-gray-700 break-all">{data.email}</p>
                                 )}
                             </div>
-
                         </div>
-                        <div className="flex flex-col gap-20 text-[24px]">
-                            <div className="flex flex-col gap-1">
-                                <p className="text-[#2A6C86]">Last name</p>
+
+                        {/* Right Column */}
+                        <div className="flex flex-col gap-8 sm:gap-12 lg:gap-20 text-base sm:text-xl lg:text-[24px] flex-1">
+                            <div className="flex flex-col gap-2">
+                                <p className="text-[#2A6C86] font-semibold">Last name</p>
                                 {isHidden ? (
                                     <input type="text"
                                         value={data.lastname}
                                         onChange={(e) => setData("lastname", e.target.value)}
-                                        className="border rounded-lg p-2"
+                                        className="border-2 border-gray-300 rounded-lg p-3 text-base sm:text-lg focus:border-blue-500 focus:outline-none"
                                     />
                                 ): (
-                                    <p>{data.lastname}</p>
+                                    <p className="text-gray-700">{data.lastname}</p>
                                 )}
                             </div>
-                            <div className="flex flex-col gap-1">
-                                <p className="text-[#2A6C86]">University</p>
+                            <div className="flex flex-col gap-2">
+                                <p className="text-[#2A6C86] font-semibold">University</p>
                                 {isHidden ? (
                                     <input type="text"
                                         value={data.university}
                                         onChange={(e) => setData("university", e.target.value)}
-                                        className="border rounded-lg p-2"
+                                        className="border-2 border-gray-300 rounded-lg p-3 text-base sm:text-lg focus:border-blue-500 focus:outline-none"
                                     />
                                 ): (
-                                    <p>{data.university}</p>
+                                    <p className="text-gray-700">{data.university}</p>
                                 )}
                             </div>
                         </div>
                     </form>
                 </div>
-                <div className="flex flex-col gap-1 w-[1350px] h-[480px] shadow-2xl rounded-2xl px-10">
-                    <div className="flex justify-start p-10">
-                        <h1 className="text-[38px]">Credibility</h1>
+
+                {/* Credibility Card */}
+                <div className="flex flex-col gap-4 w-full max-w-[1350px] shadow-2xl rounded-2xl px-6 sm:px-8 lg:px-10 py-6 sm:py-8 bg-white">
+                    <div className="flex justify-start">
+                        <h1 className="text-2xl sm:text-3xl lg:text-[38px] font-bold">Credibility</h1>
                     </div>
-                    <div className="flex gap-92 items-center py-10 px-15">
-                        <div className="flex flex-col gap-20 text-[24px]">
-                            <div className="flex flex-col gap-1">
-                                <p className="text-[#2A6C86]">Item selled</p>
-                                <p>n selled</p>
+                    <div className="flex flex-col sm:flex-row gap-8 sm:gap-12 lg:gap-20 xl:gap-92 py-4 sm:py-6 lg:py-10">
+                        {/* Left Column */}
+                        <div className="flex flex-col gap-8 sm:gap-12 lg:gap-20 text-base sm:text-xl lg:text-[24px] flex-1">
+                            <div className="flex flex-col gap-2">
+                                <p className="text-[#2A6C86] font-semibold">Item selled</p>
+                                <p className="text-gray-700">n selled</p>
                             </div>
-                            <div className="flex flex-col gap-1">
-                                <p className="text-[#2A6C86]">Response time</p>
-                                <p>1 hour</p>
-
+                            <div className="flex flex-col gap-2">
+                                <p className="text-[#2A6C86] font-semibold">Response time</p>
+                                <p className="text-gray-700">1 hour</p>
                             </div>
-
                         </div>
-                        <div className="flex flex-col gap-20 text-[24px]">
-                            <div className="flex flex-col gap-1">
-                                <p className="text-[#2A6C86]">Status</p>
-                                <p>Online</p>
+
+                        {/* Right Column */}
+                        <div className="flex flex-col gap-8 sm:gap-12 lg:gap-20 text-base sm:text-xl lg:text-[24px] flex-1">
+                            <div className="flex flex-col gap-2">
+                                <p className="text-[#2A6C86] font-semibold">Status</p>
+                                <p className="text-green-600 font-semibold">Online</p>
                             </div>
-                            <div className="flex flex-col gap-1">
-                                <p className="text-[#2A6C86]">Account age</p>
-                                <p>1 Year</p>
+                            <div className="flex flex-col gap-2">
+                                <p className="text-[#2A6C86] font-semibold">Account age</p>
+                                <p className="text-gray-700">1 Year</p>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div className="flex justify-between gap-3">
+
+                {/* Action Buttons */}
+                <div className="flex flex-col sm:flex-row justify-center gap-4 sm:gap-3 w-full max-w-[1350px]">
                     {isHidden ? (
-                    <div className="text-[42px] border-2 w-[800px] h-[90px] flex justify-center items-center rounded-3xl cursor-pointer" onClick={(e) => {
+                        <div className="text-2xl sm:text-3xl lg:text-[42px] border-2 border-gray-300 w-full sm:w-[600px] lg:w-[800px] h-[70px] sm:h-[80px] lg:h-[90px] flex justify-center items-center rounded-3xl cursor-pointer hover:bg-gray-100 transition-colors bg-white" onClick={(e) => {
                             e.preventDefault();
                             handleSubmit(e);
                             setIsHidden(!isHidden);
                         }}>
-                        <button type="submit" disabled={processing} className="cursor-pointer" onClick={(e) => {
-                            e.preventDefault();
-                            handleSubmit(e);
-                            setIsHidden(!isHidden);
-                        }}>
-                            {processing ? "Saving..." : "Update"}
-                        </button>
-                    </div>
+                            <button type="submit" disabled={processing} className="cursor-pointer font-semibold" onClick={(e) => {
+                                e.preventDefault();
+                                handleSubmit(e);
+                                setIsHidden(!isHidden);
+                            }}>
+                                {processing ? "Saving..." : "Update"}
+                            </button>
+                        </div>
                     ) : (
                         <>
-                            <div className="w-[670px] h-[75px] bg-[#8CF375] flex justify-center items-center text-[32px] rounded-3xl cursor-pointer border-2" onClick={()=> setCompleted(!completed)}>
-                                <button onClick={() => setCompleted(!completed)} className="cursor-pointer">Completed Transaction</button>
+                            <div className="w-full sm:w-[48%] lg:w-[670px] h-[60px] sm:h-[70px] lg:h-[75px] bg-[#8CF375] hover:bg-[#7BE363] flex justify-center items-center text-xl sm:text-2xl lg:text-[32px] rounded-3xl cursor-pointer border-2 border-gray-300 transition-colors" onClick={()=> setCompleted(!completed)}>
+                                <button onClick={() => setCompleted(!completed)} className="cursor-pointer font-semibold">Completed Transaction</button>
                             </div>
-                            <div className="w-[670px] h-[75px] bg-[#F64848] flex justify-center items-center text-[32px] rounded-3xl cursor-pointer border-2" onClick={()=> setReported(!reported)}>
-                                <button onClick={() => setReported(!reported)} className="cursor-pointer">Report Seller</button>
+                            <div className="w-full sm:w-[48%] lg:w-[670px] h-[60px] sm:h-[70px] lg:h-[75px] bg-[#F64848] hover:bg-[#E53939] flex justify-center items-center text-xl sm:text-2xl lg:text-[32px] rounded-3xl cursor-pointer border-2 border-gray-300 transition-colors" onClick={()=> {
+                                // Set default reported user (dari transaksi terakhir jika ada)
+                                if (completedTransactions.length > 0) {
+                                    const lastTransaction = completedTransactions[0];
+                                    setReportedUserId(role === 'Seller' ? lastTransaction.buyer_id : lastTransaction.seller_id);
+                                    setAppointmentId(lastTransaction.appointment_id || null);
+                                }
+                                setReported(!reported);
+                            }}>
+                                <button onClick={() => {
+                                    if (completedTransactions.length > 0) {
+                                        const lastTransaction = completedTransactions[0];
+                                        setReportedUserId(role === 'Seller' ? lastTransaction.buyer_id : lastTransaction.seller_id);
+                                        setAppointmentId(lastTransaction.appointment_id || null);
+                                    }
+                                    setReported(!reported);
+                                }} className="cursor-pointer font-semibold">Report {role === 'Seller' ? 'Buyer' : 'Seller'}</button>
                             </div>
                         </>
                     )}
                 </div>
+                {/* Completed Transactions Modal */}
                 {completed && (
-                    <div className="absolute flex flex-col justify-center w-[900px] h-[800px] bg-[#BBDCE5] border-2 rounded-3xl">
-                        <div className="w-full h-[100px] mt-10 flex justify-beetween items-center gap-130 px-15 py-10 text-[32px]">
-                            <h1>All Transactions</h1>
-                            <button onClick={() => setCompleted(!completed)}><img src="/cross.png" alt="back" className="w-[20px] h-[20px]"/></button>
+                    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
+                        <div className="flex flex-col w-full max-w-[900px] max-h-[90vh] bg-[#BBDCE5] border-2 rounded-2xl sm:rounded-3xl overflow-hidden">
+                            {/* Modal Header */}
+                            <div className="w-full flex justify-between items-center px-4 sm:px-6 lg:px-8 py-4 sm:py-6 border-b-2 border-[#9FCAD8] bg-[#A8D2E0]">
+                                <h1 className="text-xl sm:text-2xl lg:text-[32px] font-bold">All Transactions</h1>
+                                <button
+                                    onClick={() => setCompleted(!completed)}
+                                    className="w-8 h-8 sm:w-10 sm:h-10 flex justify-center items-center rounded-full hover:bg-[#9FCAD8] transition-colors"
+                                >
+                                    <img src="/cross.png" alt="close" className="w-4 h-4 sm:w-5 sm:h-5"/>
+                                </button>
+                            </div>
 
-                        </div>
-                        <div className="flex justify-center items-start px-15 py-10 w-full h-full">
-                            <table className="w-full border-separate">
-                                <thead>
-                                    <th className="text-[28px] text-left">Time</th>
-                                    <th className="text-[28px] text-left">Buyer</th>
-                                    <th className="text-[28px] text-left">Method</th>
-                                    <th className="text-[28px] text-left">ID</th>
-                                    <th className="text-[28px] text-left">Amount</th>
-                                </thead>
-                                <tbody>
-                                    {[
-                                        {date: "Aug 6, 2025", buyer: "Dane John", method: "COD", id: "INV202508069876", amount: "Rp 200.000", success: true },
-                                        {date: "Aug 6, 2025", buyer: "Dane John", method: "COD", id: "INV202508069876", amount: "Rp 200.000", success: false },
-                                        {date: "Aug 6, 2025", buyer: "Dane John", method: "COD", id: "INV202508069876", amount: "Rp 200.000", success: true },
-                                        {date: "Aug 6, 2025", buyer: "Dane John", method: "COD", id: "INV202508069876", amount: "Rp 200.000", success: false },
-                                        {date: "Aug 6, 2025", buyer: "Dane John", method: "COD", id: "INV202508069876", amount: "Rp 200.000", success: true },
-                                        {date: "Aug 6, 2025", buyer: "Dane John", method: "COD", id: "INV202508069876", amount: "Rp 200.000", success: false },
-                                        {date: "Aug 6, 2025", buyer: "Dane John", method: "COD", id: "INV202508069876", amount: "Rp 200.000", success: true },
-                                        {date: "Aug 6, 2025", buyer: "Dane John", method: "COD", id: "INV202508069876", amount: "Rp 200.000", success: false },
-                                        {date: "Aug 6, 2025", buyer: "Dane John", method: "COD", id: "INV202508069876", amount: "Rp 200.000", success: true },
-                                        {date: "Aug 6, 2025", buyer: "Dane John", method: "COD", id: "INV202508069876", amount: "Rp 200.000", success: false },
-                                        {date: "Aug 6, 2025", buyer: "Dane John", method: "COD", id: "INV202508069876", amount: "Rp 200.000", success: true },
-                                        {date: "Aug 6, 2025", buyer: "Dane John", method: "COD", id: "INV202508069876", amount: "Rp 200.000", success: false },
-                                        {date: "Aug 6, 2025", buyer: "Dane John", method: "COD", id: "INV202508069876", amount: "Rp 200.000", success: true },
-                                    ].map((row, index) => (
-                                        <tr
-                                            key={index}
-                                            className={`${
-                                            index % 2 === 0 ? "bg-[#C9E3EB]" : "bg-[#BBDCE5]"
-                                        } border-b border-[#9FCAD8] hover:bg-[#A8D2E0] transition`}
-                                        >
-                                            <td className="w-[130px] px-2">{row.date}</td>
-                                            <td className="w-[120px] px-2">{row.buyer}</td>
-                                            <td className="w-[130px] px-2">{row.method}</td>
-                                            <td className="w-[170px] px-2">{row.id}</td>
-                                            <td className="w-[170px] px-2">{row.amount}</td>
-                                            <td className="py-2 px-4 flex justify-center items-center">
-                                                {row.success ? (
-                                                <div className="bg-green-500 w-6 h-6 rounded-full flex justify-center items-center">
-                                                    <img src="/check.png" alt="check" className="w-3 h-3" />
-                                                </div>
-                                                ) : (
-                                                <div className="bg-red-500 w-6 h-6 rounded-full flex justify-center items-center">
-                                                    <img src="/cross.png" alt="cross" className="w-3 h-3" />
-                                                </div>
-                                                )}
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                            {/* Modal Content - Scrollable */}
+                            <div className="flex-1 overflow-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+                                {completedTransactions.length > 0 ? (
+                                    <>
+                                        {/* Desktop Table View (hidden on mobile) */}
+                                        <div className="hidden md:block overflow-x-auto">
+                                            <table className="w-full border-separate border-spacing-0">
+                                                <thead>
+                                                    <tr className="bg-[#9FCAD8]">
+                                                        <th className="text-base lg:text-[24px] text-left px-3 py-3 font-bold rounded-tl-lg">Time</th>
+                                                        <th className="text-base lg:text-[24px] text-left px-3 py-3 font-bold">Buyer</th>
+                                                        <th className="text-base lg:text-[24px] text-left px-3 py-3 font-bold">Method</th>
+                                                        <th className="text-base lg:text-[24px] text-left px-3 py-3 font-bold">ID</th>
+                                                        <th className="text-base lg:text-[24px] text-left px-3 py-3 font-bold">Amount</th>
+                                                        <th className="text-base lg:text-[24px] text-center px-3 py-3 font-bold rounded-tr-lg">Status</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {completedTransactions.map((row, index) => (
+                                                        <tr
+                                                            key={index}
+                                                            className={`${
+                                                                index % 2 === 0 ? "bg-[#C9E3EB]" : "bg-[#BBDCE5]"
+                                                            } hover:bg-[#A8D2E0] transition-colors`}
+                                                        >
+                                                            <td className="px-3 py-3 text-sm lg:text-base">{row.date}</td>
+                                                            <td className="px-3 py-3 text-sm lg:text-base">{row.buyer}</td>
+                                                            <td className="px-3 py-3 text-sm lg:text-base">{row.method}</td>
+                                                            <td className="px-3 py-3 text-sm lg:text-base truncate max-w-[150px]">{row.id}</td>
+                                                            <td className="px-3 py-3 text-sm lg:text-base">{row.amount}</td>
+                                                            <td className="px-3 py-3 flex justify-center items-center">
+                                                                {row.success ? (
+                                                                    <div className="bg-green-500 w-6 h-6 lg:w-7 lg:h-7 rounded-full flex justify-center items-center shadow-md">
+                                                                        <img src="/check.png" alt="success" className="w-3 h-3 lg:w-4 lg:h-4" />
+                                                                    </div>
+                                                                ) : (
+                                                                    <div className="bg-red-500 w-6 h-6 lg:w-7 lg:h-7 rounded-full flex justify-center items-center shadow-md">
+                                                                        <img src="/cross.png" alt="failed" className="w-3 h-3 lg:w-4 lg:h-4" />
+                                                                    </div>
+                                                                )}
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
 
+                                        {/* Mobile Card View (visible on mobile only) */}
+                                        <div className="md:hidden flex flex-col gap-3">
+                                            {completedTransactions.map((row, index) => (
+                                                <div
+                                                    key={index}
+                                                    className="bg-white rounded-lg p-4 shadow-md border-2 border-[#9FCAD8]"
+                                                >
+                                                    <div className="flex justify-between items-start mb-3">
+                                                        <div className="flex-1">
+                                                            <p className="text-xs text-gray-500 mb-1">Time</p>
+                                                            <p className="text-sm font-semibold">{row.date}</p>
+                                                        </div>
+                                                        {row.success ? (
+                                                            <div className="bg-green-500 w-8 h-8 rounded-full flex justify-center items-center shadow-md">
+                                                                <img src="/check.png" alt="success" className="w-4 h-4" />
+                                                            </div>
+                                                        ) : (
+                                                            <div className="bg-red-500 w-8 h-8 rounded-full flex justify-center items-center shadow-md">
+                                                                <img src="/cross.png" alt="failed" className="w-4 h-4" />
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    <div className="grid grid-cols-2 gap-2">
+                                                        <div>
+                                                            <p className="text-xs text-gray-500">Buyer</p>
+                                                            <p className="text-sm font-medium">{row.buyer}</p>
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-xs text-gray-500">Method</p>
+                                                            <p className="text-sm font-medium">{row.method}</p>
+                                                        </div>
+                                                        <div className="col-span-2">
+                                                            <p className="text-xs text-gray-500">Transaction ID</p>
+                                                            <p className="text-sm font-medium truncate">{row.id}</p>
+                                                        </div>
+                                                        <div className="col-span-2">
+                                                            <p className="text-xs text-gray-500">Amount</p>
+                                                            <p className="text-base font-bold text-[#2A6C86]">{row.amount}</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </>
+                                ) : (
+                                    <div className="flex flex-col items-center justify-center py-12 text-gray-600">
+                                        <svg className="w-16 h-16 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                        </svg>
+                                        <p className="text-lg font-semibold">No completed transactions</p>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
                 )}
+                {/* Report Modal */}
                 {reported && (
-                     <div className="absolute flex flex-col justify-center items-start w-[900px] h-[800px] px-10 bg-white border-2 rounded-3xl">
-                        <h1 className="text-[48px]">Report Seller</h1>
-                      <div className="flex flex-col justify-between gap-5 mt-10 px-3">
-                            <h1 className="text-[32px] mb-2">Why you report this seller?</h1>
-                            <div className="flex items-center gap-2 cursor-pointer">
-                                <div
-                                    onClick={() => setSelected(!selected)}
-                                    className={`w-[37px] h-[37px] rounded-full border-3 ${
-                                    selected ? "bg-blue-600 border-black" : "bg-white border-black"
-                                    }`}
-                                />
-                                <span className="text-[28px] text-[#F64848]">Buyer didn’t show up</span>
+                    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
+                        <div className="flex flex-col w-full max-w-[900px] max-h-[90vh] bg-white border-2 rounded-2xl sm:rounded-3xl overflow-hidden">
+                            {/* Modal Header */}
+                            <div className="w-full flex justify-between items-center px-4 sm:px-6 lg:px-10 py-4 sm:py-6 border-b-2 border-gray-200 bg-red-50">
+                                <h1 className="text-2xl sm:text-3xl lg:text-[48px] font-bold text-[#F64848]">
+                                    Report {role === 'Seller' ? 'Buyer' : 'Seller'}
+                                </h1>
+                                <button
+                                    onClick={() => setReported(!reported)}
+                                    className="w-8 h-8 sm:w-10 sm:h-10 flex justify-center items-center rounded-full hover:bg-gray-200 transition-colors"
+                                >
+                                    <img src="/cross.png" alt="close" className="w-4 h-4 sm:w-5 sm:h-5"/>
+                                </button>
                             </div>
-                            <div className="flex items-center gap-2 cursor-pointer">
-                                <div
-                                    onClick={() => setSelected2(!selected2)}
-                                    className={`w-[37px] h-[37px] rounded-full border-3 ${
-                                    selected2 ? "bg-blue-600 border-black" : "bg-white border-black"
-                                    }`}
-                                />
-                                <span className="text-[28px] text-[#F64848]">Buyer asked to lower the price too much</span>
-                            </div>
-                            <div className="flex items-center gap-2 cursor-pointer">
-                                <div
-                                    onClick={() => setSelected3(!selected3)}
-                                    className={`w-[37px] h-[37px] rounded-full border-3 ${
-                                    selected3 ? "bg-blue-600 border-black" : "bg-white border-black"
-                                    }`}
-                                />
-                                <span className="text-[28px] text-[#F64848]">Buyer changed meeting time/place suddenly</span>
-                            </div>
-                            <div className="flex items-center gap-2 cursor-pointer">
-                                <div
-                                    onClick={() => setSelected4(!selected4)}
-                                    className={`w-[37px] h-[37px] rounded-full border-3 ${
-                                    selected4 ? "bg-blue-600 border-black" : "bg-white border-black"
-                                    }`}
-                                />
-                                <span className="text-[28px] text-[#F64848]">Safety concerns about the buyer</span>
-                            </div>
-                            <div className="flex items-center gap-2 cursor-pointer">
-                                <div
-                                    onClick={() => setSelected5(!selected5)}
-                                    className={`w-[37px] h-[37px] rounded-full border-3 ${
-                                    selected5 ? "bg-blue-600 border-black" : "bg-white border-black"
-                                    }`}
-                                />
-                                <span className="text-[28px] text-[#F64848]">Buyer check too many but not serious</span>
-                            </div>
-                            <div className="flex items-center gap-2 cursor-pointer">
-                                <div
-                                    onClick={() => setSelected6(!selected6)}
-                                    className={`w-[37px] h-[37px] rounded-full border-3 ${
-                                    selected6 ? "bg-blue-600 border-black" : "bg-white border-black"
-                                    }`}
-                                />
-                                <span className="text-[28px] text-[#F64848]">Buyer seemed suspicious</span>
-                            </div>
-                            <div className="flex items-center gap-2 cursor-pointer">
-                                <div
-                                    onClick={() => setSelected7(!selected7)}
-                                    className={`w-[37px] h-[37px] rounded-full border-3 ${
-                                    selected7 ? "bg-blue-600 border-black" : "bg-white border-black"
-                                    }`}
-                                />
-                                <span className="text-[28px] text-[#F64848]">Buyer didn’t follow the agreed COD location</span>
-                            </div>
-                            <div className="flex items-center gap-2 cursor-pointer">
-                                <div
-                                    onClick={() => setSelected8(!selected8)}
-                                    className={`w-[37px] h-[37px] rounded-full border-3 ${
-                                    selected8 ? "bg-blue-600 border-black" : "bg-white border-black"
-                                    }`}
-                                />
-                                <span className="text-[28px] text-[#F64848]">Buyer didn’t agree with product condition</span>
-                            </div>
-                        </div>
-                            <div className="w-full flex justify-center mt-10">
-                                <div className="flex justify-center items-center w-[536px] h-[52px] border-2 rounded-2xl cursor-pointer" onClick={() => {setReported(!reported)}}>
-                                    <button className="text-[32px] cursor-pointer" onClick={() => {setReported(!reported)}}>Submit</button>
+
+                            {/* Modal Content - Scrollable */}
+                            <div className="flex-1 overflow-auto px-4 sm:px-6 lg:px-10 py-4 sm:py-6">
+                                <h2 className="text-lg sm:text-xl lg:text-[32px] font-semibold mb-4 sm:mb-6">
+                                    Why are you reporting this {role === 'Seller' ? 'buyer' : 'seller'}?
+                                </h2>
+
+                                <div className="flex flex-col gap-3 sm:gap-4 lg:gap-5">
+                                    {/* Reason 1 */}
+                                    <div
+                                        className="flex items-center gap-3 sm:gap-4 cursor-pointer p-2 sm:p-3 rounded-lg hover:bg-red-50 transition-colors"
+                                        onClick={() => setSelected(!selected)}
+                                    >
+                                        <div
+                                            className={`w-7 h-7 sm:w-8 sm:h-8 lg:w-[37px] lg:h-[37px] rounded-full border-2 lg:border-3 flex-shrink-0 transition-all ${
+                                                selected ? "bg-blue-600 border-blue-700" : "bg-white border-gray-400"
+                                            }`}
+                                        >
+                                            {selected && (
+                                                <div className="w-full h-full flex items-center justify-center">
+                                                    <div className="w-3 h-3 sm:w-4 sm:h-4 bg-white rounded-full"></div>
+                                                </div>
+                                            )}
+                                        </div>
+                                        <span className="text-sm sm:text-lg lg:text-[24px] xl:text-[28px] text-[#F64848] font-medium">
+                                            {role === 'Seller' ? 'Buyer' : 'Seller'} didn't show up
+                                        </span>
+                                    </div>
+
+                                    {/* Reason 2 */}
+                                    <div
+                                        className="flex items-center gap-3 sm:gap-4 cursor-pointer p-2 sm:p-3 rounded-lg hover:bg-red-50 transition-colors"
+                                        onClick={() => setSelected2(!selected2)}
+                                    >
+                                        <div
+                                            className={`w-7 h-7 sm:w-8 sm:h-8 lg:w-[37px] lg:h-[37px] rounded-full border-2 lg:border-3 flex-shrink-0 transition-all ${
+                                                selected2 ? "bg-blue-600 border-blue-700" : "bg-white border-gray-400"
+                                            }`}
+                                        >
+                                            {selected2 && (
+                                                <div className="w-full h-full flex items-center justify-center">
+                                                    <div className="w-3 h-3 sm:w-4 sm:h-4 bg-white rounded-full"></div>
+                                                </div>
+                                            )}
+                                        </div>
+                                        <span className="text-sm sm:text-lg lg:text-[24px] xl:text-[28px] text-[#F64848] font-medium">
+                                            {role === 'Seller' ? 'Buyer' : 'Seller'} asked to lower the price too much
+                                        </span>
+                                    </div>
+
+                                    {/* Reason 3 */}
+                                    <div
+                                        className="flex items-center gap-3 sm:gap-4 cursor-pointer p-2 sm:p-3 rounded-lg hover:bg-red-50 transition-colors"
+                                        onClick={() => setSelected3(!selected3)}
+                                    >
+                                        <div
+                                            className={`w-7 h-7 sm:w-8 sm:h-8 lg:w-[37px] lg:h-[37px] rounded-full border-2 lg:border-3 flex-shrink-0 transition-all ${
+                                                selected3 ? "bg-blue-600 border-blue-700" : "bg-white border-gray-400"
+                                            }`}
+                                        >
+                                            {selected3 && (
+                                                <div className="w-full h-full flex items-center justify-center">
+                                                    <div className="w-3 h-3 sm:w-4 sm:h-4 bg-white rounded-full"></div>
+                                                </div>
+                                            )}
+                                        </div>
+                                        <span className="text-sm sm:text-lg lg:text-[24px] xl:text-[28px] text-[#F64848] font-medium">
+                                            Changed meeting time/place suddenly
+                                        </span>
+                                    </div>
+
+                                    {/* Reason 4 */}
+                                    <div
+                                        className="flex items-center gap-3 sm:gap-4 cursor-pointer p-2 sm:p-3 rounded-lg hover:bg-red-50 transition-colors"
+                                        onClick={() => setSelected4(!selected4)}
+                                    >
+                                        <div
+                                            className={`w-7 h-7 sm:w-8 sm:h-8 lg:w-[37px] lg:h-[37px] rounded-full border-2 lg:border-3 flex-shrink-0 transition-all ${
+                                                selected4 ? "bg-blue-600 border-blue-700" : "bg-white border-gray-400"
+                                            }`}
+                                        >
+                                            {selected4 && (
+                                                <div className="w-full h-full flex items-center justify-center">
+                                                    <div className="w-3 h-3 sm:w-4 sm:h-4 bg-white rounded-full"></div>
+                                                </div>
+                                            )}
+                                        </div>
+                                        <span className="text-sm sm:text-lg lg:text-[24px] xl:text-[28px] text-[#F64848] font-medium">
+                                            Safety concerns about the {role === 'Seller' ? 'buyer' : 'seller'}
+                                        </span>
+                                    </div>
+
+                                    {/* Reason 5 */}
+                                    <div
+                                        className="flex items-center gap-3 sm:gap-4 cursor-pointer p-2 sm:p-3 rounded-lg hover:bg-red-50 transition-colors"
+                                        onClick={() => setSelected5(!selected5)}
+                                    >
+                                        <div
+                                            className={`w-7 h-7 sm:w-8 sm:h-8 lg:w-[37px] lg:h-[37px] rounded-full border-2 lg:border-3 flex-shrink-0 transition-all ${
+                                                selected5 ? "bg-blue-600 border-blue-700" : "bg-white border-gray-400"
+                                            }`}
+                                        >
+                                            {selected5 && (
+                                                <div className="w-full h-full flex items-center justify-center">
+                                                    <div className="w-3 h-3 sm:w-4 sm:h-4 bg-white rounded-full"></div>
+                                                </div>
+                                            )}
+                                        </div>
+                                        <span className="text-sm sm:text-lg lg:text-[24px] xl:text-[28px] text-[#F64848] font-medium">
+                                            Checked too many times but not serious
+                                        </span>
+                                    </div>
+
+                                    {/* Reason 6 */}
+                                    <div
+                                        className="flex items-center gap-3 sm:gap-4 cursor-pointer p-2 sm:p-3 rounded-lg hover:bg-red-50 transition-colors"
+                                        onClick={() => setSelected6(!selected6)}
+                                    >
+                                        <div
+                                            className={`w-7 h-7 sm:w-8 sm:h-8 lg:w-[37px] lg:h-[37px] rounded-full border-2 lg:border-3 flex-shrink-0 transition-all ${
+                                                selected6 ? "bg-blue-600 border-blue-700" : "bg-white border-gray-400"
+                                            }`}
+                                        >
+                                            {selected6 && (
+                                                <div className="w-full h-full flex items-center justify-center">
+                                                    <div className="w-3 h-3 sm:w-4 sm:h-4 bg-white rounded-full"></div>
+                                                </div>
+                                            )}
+                                        </div>
+                                        <span className="text-sm sm:text-lg lg:text-[24px] xl:text-[28px] text-[#F64848] font-medium">
+                                            Seemed suspicious
+                                        </span>
+                                    </div>
+
+                                    {/* Reason 7 */}
+                                    <div
+                                        className="flex items-center gap-3 sm:gap-4 cursor-pointer p-2 sm:p-3 rounded-lg hover:bg-red-50 transition-colors"
+                                        onClick={() => setSelected7(!selected7)}
+                                    >
+                                        <div
+                                            className={`w-7 h-7 sm:w-8 sm:h-8 lg:w-[37px] lg:h-[37px] rounded-full border-2 lg:border-3 flex-shrink-0 transition-all ${
+                                                selected7 ? "bg-blue-600 border-blue-700" : "bg-white border-gray-400"
+                                            }`}
+                                        >
+                                            {selected7 && (
+                                                <div className="w-full h-full flex items-center justify-center">
+                                                    <div className="w-3 h-3 sm:w-4 sm:h-4 bg-white rounded-full"></div>
+                                                </div>
+                                            )}
+                                        </div>
+                                        <span className="text-sm sm:text-lg lg:text-[24px] xl:text-[28px] text-[#F64848] font-medium">
+                                            Didn't follow the agreed COD location
+                                        </span>
+                                    </div>
+
+                                    {/* Reason 8 */}
+                                    <div
+                                        className="flex items-center gap-3 sm:gap-4 cursor-pointer p-2 sm:p-3 rounded-lg hover:bg-red-50 transition-colors"
+                                        onClick={() => setSelected8(!selected8)}
+                                    >
+                                        <div
+                                            className={`w-7 h-7 sm:w-8 sm:h-8 lg:w-[37px] lg:h-[37px] rounded-full border-2 lg:border-3 flex-shrink-0 transition-all ${
+                                                selected8 ? "bg-blue-600 border-black" : "bg-white border-gray-400"
+                                            }`}
+                                        >
+                                            {selected8 && (
+                                                <div className="w-full h-full flex items-center justify-center">
+                                                    <div className="w-3 h-3 sm:w-4 sm:h-4 bg-white rounded-full"></div>
+                                                </div>
+                                            )}
+                                        </div>
+                                        <span className="text-sm sm:text-lg lg:text-[24px] xl:text-[28px] text-[#F64848] font-medium">
+                                            Didn't agree with product condition
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
+
+                            {/* Modal Footer */}
+                            <div className="w-full flex justify-center px-4 sm:px-6 lg:px-10 py-4 sm:py-6 border-t-2 border-gray-200 bg-gray-50">
+                                <button
+                                    onClick={handleReportSubmit}
+                                    className="w-full sm:w-auto min-w-[200px] sm:min-w-[300px] lg:min-w-[536px] h-[48px] sm:h-[52px] border-2 border-[#F64848] bg-[#F64848] hover:bg-[#E53939] text-white rounded-2xl text-lg sm:text-xl lg:text-[32px] font-bold cursor-pointer transition-colors shadow-md"
+                                >
+                                    Submit Report
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 )}
             </div>

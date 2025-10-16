@@ -42,7 +42,10 @@ public function UserDashboard()
                 'product_price' => $product->product_price,
                 'description' => $product->description,
                 'seller_name' => $product->user->name ?? 'Unknown Seller',
+                'category' => is_string($product->category) ? strtolower($product->category) : ($product->category ?? null),
                 'images' => $product->getMedia('product_images')->map(fn($m) => $m->getUrl()),
+                'user_id' => $product->user_id,
+                'seller_id' => $product->user_id,
             ];
         });
 

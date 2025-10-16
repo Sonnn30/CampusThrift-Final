@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use App\Models\Product;
+use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use App\Models\Review;
@@ -15,10 +16,14 @@ class ProductController extends Controller
 {
      use AuthorizesRequests;
     // Tampilkan semua product milik user
-    public function index()
+    public function index(Request $request)
     {
+        // Allow optional ?user_id= to view products for a specific seller.
+        // If not provided, default to the authenticated seller's products.
+        $sellerId = (int) $request->query('user_id') ?: Auth::id();
+
         $products = Product::with('media')
-            ->where('user_id', Auth::id())
+            ->where('user_id', $sellerId)
             ->get()
             ->map(function ($product) {
                 return [
@@ -26,27 +31,51 @@ class ProductController extends Controller
                     'product_name' => $product->product_name,
                     'product_price' => $product->product_price,
                     'description' => $product->description,
+                    'category' => is_string($product->category) ? strtolower($product->category) : ($product->category ?? null),
                     'images' => $product->getMedia('product_images')->map(fn($m) => $m->getUrl()),
+                    'user_id' => $product->user_id,
+                    'seller_id' => $product->user_id,
                 ];
             });
+
+        // Fetch seller info
+        $seller = User::find($sellerId);
+        $sellerName = $seller?->name ?? 'Unknown Seller';
+        $itemsCount = Product::where('user_id', $sellerId)->count();
+        $sellerRating = round((float) Review::where('reviewee_id', $sellerId)->avg('rating'), 1);
+        $sellerJoined = $seller?->created_at?->format('d M Y') ?? '';
 
         return Inertia::render('SellerProductPage', [
             'products' => $products,
             'role' => 'Seller',
+            'seller' => [
+                'id' => $sellerId,
+                'name' => $sellerName,
+                'itemsCount' => $itemsCount,
+                'rating' => $sellerRating,
+                'joinedAt' => $sellerJoined,
+                'status' => 'Online',
+            ],
         ]);
     }
     public function publicCatalog()
 {
-    $products = Product::with('media', 'user')
+    $products = Product::with('media', 'user', 'appointments')
         ->get()
         ->map(function ($product) {
+            // Hitung penjualan: jumlah appointment dengan status 'completed'
+            $salesCount = $product->appointments->where('status', 'completed')->count();
             return [
                 'id' => $product->id,
                 'product_name' => $product->product_name,
                 'product_price' => $product->product_price,
                 'description' => $product->description,
+                'category' => is_string($product->category) ? strtolower($product->category) : ($product->category ?? null),
                 'seller_name' => $product->user->name ?? 'Unknown Seller',
                 'images' => $product->getMedia('product_images')->map(fn($m) => $m->getUrl()),
+                'sales_count' => $salesCount,
+                'user_id' => $product->user_id,
+                'seller_id' => $product->user_id,
             ];
         });
 
@@ -202,7 +231,7 @@ public function show($id)
     $images = $product->getMedia('product_images');
     $imageUrls = $images->isNotEmpty()
         ? $images->map(fn($m) => $m->getUrl())
-        : [asset('images/default_product.png')];
+        : [asset('placeholder-2.png')];
 
     // Fetch other products from the same seller (exclude current product)
     $otherProducts = Product::with('media')
@@ -225,11 +254,12 @@ public function show($id)
     $ratingAvg = round((float) Review::where('reviewee_id', $sellerId)->avg('rating'), 1);
     $ratingCount = (int) Review::where('reviewee_id', $sellerId)->count('id');
 
-    // Ambil semua appointment untuk produk ini
-    $appointments = $product->appointments()->pluck('id');
-    // Ambil semua review dari appointment terkait
-    $reviews = Review::whereIn('appointment_id', $appointments)
-        ->with(['reviewer'])
+    // Ambil semua review terkait produk ini melalui relasi appointment
+    // (pastikan kita menampilkan review yang terkait dengan appointment dari produk ini)
+    $reviews = Review::whereHas('appointment', function ($q) use ($product) {
+            $q->where('product_id', $product->id);
+        })
+        ->with('reviewer')
         ->latest()
         ->get()
         ->map(function ($rev) {
@@ -237,7 +267,7 @@ public function show($id)
                 'buyer' => $rev->reviewer->name ?? 'Unknown',
                 'date' => $rev->created_at ? $rev->created_at->format('d M Y') : '',
                 'text' => $rev->comment ?? '',
-                'rating' => $rev->rating,
+                'rating' => $rev->rating ?? 0,
             ];
         });
 
@@ -249,6 +279,7 @@ public function show($id)
             'price' => $product->product_price,
             'description' => explode("\n", $product->description ?? ''),
             'images' => $imageUrls,
+            'seller_id' => $product->user_id,
             'shipping' => [
                 'method' => is_array($product->shipping_method)
                     ? $product->shipping_method

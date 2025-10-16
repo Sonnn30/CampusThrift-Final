@@ -132,96 +132,164 @@ export default function CODLocation({ product, selectedDate, selectedTime, avail
 
     return(
         <>
-        <div className="flex flex-col justify-center items-center w-full h-full gap-10 mb-20">
-            <div className="flex flex-col items-center mt-20">
-                <h2 className="text-[40px]">COD</h2>
-                <h1 className="text-[54px]">Select your locations</h1>
+        <div className="flex flex-col justify-center items-center w-full min-h-screen p-4 sm:p-6 lg:p-10 bg-gray-50">
+            {/* Header */}
+            <div className="flex flex-col items-center mt-4 sm:mt-8 lg:mt-12 mb-6 sm:mb-8 lg:mb-10">
+                <h2 className="text-2xl sm:text-3xl lg:text-[40px] font-semibold text-gray-700">COD</h2>
+                <h1 className="text-3xl sm:text-4xl lg:text-[54px] font-bold text-center">Select your locations</h1>
             </div>
-            <div className="flex justify-center items-stretch w-[1217px] h-[880px] divide-x-4  divide-[#BBDCE5] border-4 border-[#BBDCE5]">
-                <div className="flex-1 flex justify-start items-start">
-                    <div className="flex flex-col justify-between items-start gap-8">
-                        <div className="">
-                            <img src="/LogoCampusThrift.png" alt="CampusThrift" width={190} height={190} className="mt-10 ml-10"/>
+
+            {/* Main Container */}
+            <div className="flex flex-col lg:flex-row justify-center items-stretch w-full max-w-[1217px] lg:min-h-[880px] border-2 sm:border-4 border-[#BBDCE5] rounded-lg lg:rounded-none bg-white shadow-xl overflow-hidden">
+                {/* Left Panel - Info & Selection Display */}
+                <div className="flex-1 flex flex-col justify-between items-start p-6 sm:p-8 lg:p-10 border-b-2 lg:border-b-0 lg:border-r-4 border-[#BBDCE5]">
+                    <div className="flex flex-col gap-6 sm:gap-8 w-full">
+                        {/* Logo */}
+                        <div className="flex justify-center lg:justify-start">
+                            <img
+                                src="/LogoCampusThrift.png"
+                                alt="CampusThrift"
+                                className="w-[120px] sm:w-[150px] lg:w-[190px] h-auto"
+                            />
                         </div>
-                        <div className="ml-9.5">
-                            <h1 className="text-[40px] font-bold">Select Location Page </h1>
+
+                        {/* Title */}
+                        <div>
+                            <h1 className="text-2xl sm:text-3xl lg:text-[40px] font-bold text-gray-800">Select Location Page</h1>
                         </div>
-                        <div className="flex justify-between ml-9 gap-3">
-                            <img src="/calendar.png" alt="calendar" width={40} height={40}/>
-                            <p className="text-[24px]">{date ? format(date, "dd/MM/yyyy") : "No date selected"}</p>
+
+                        {/* Selected Date Display */}
+                        <div className="flex items-center gap-3 bg-gray-50 p-4 rounded-lg border border-gray-200">
+                            <img
+                                src="/calendar.png"
+                                alt="calendar"
+                                className="w-8 h-8 sm:w-10 sm:h-10 flex-shrink-0"
+                            />
+                            <p className="text-lg sm:text-xl lg:text-[24px] font-medium">
+                                {date ? format(date, "dd/MM/yyyy") : "No date selected"}
+                            </p>
                         </div>
-                        <div className="flex justify-between ml-9 gap-3">
-                                <img src="/clock.png" alt="calendar" width={40} height={40}/>
-                                <p className="text-[24px]">{time.hour}:{time.minute}</p>
+
+                        {/* Selected Time Display */}
+                        <div className="flex items-center gap-3 bg-gray-50 p-4 rounded-lg border border-gray-200">
+                            <img
+                                src="/clock.png"
+                                alt="clock"
+                                className="w-8 h-8 sm:w-10 sm:h-10 flex-shrink-0"
+                            />
+                            <p className="text-lg sm:text-xl lg:text-[24px] font-medium">
+                                {time.hour}:{time.minute}
+                            </p>
                         </div>
-                        <div className="flex justify-between ml-9 gap-3">
-                                <img src="/map.png" alt="calendar" className="absoulute w-[40px] h-[40px]"/>
-                                <p className="text-[24px]">{selectedLocation.display_name}</p>
-                        </div>
-                        <div className="absolute mt-[46%] ml-7 w-[491px] h-[68px] bg-[#BBDCE5] rounded-xl">
-                        <button
-                            className="absolute inset-0 text-[32px] hover:cursor-pointer"
-                            onClick={goToNext}
-                        >
-                            Make Appointment
-                        </button>
+
+                        {/* Selected Location Display */}
+                        <div className="flex items-start gap-3 bg-green-50 p-4 rounded-lg border border-green-200">
+                            <img
+                                src="/map.png"
+                                alt="map"
+                                className="w-8 h-8 sm:w-10 sm:h-10 flex-shrink-0 mt-1"
+                            />
+                            <p className="text-lg sm:text-xl lg:text-[24px] font-medium text-green-700 break-words">
+                                {selectedLocation.display_name}
+                            </p>
                         </div>
                     </div>
+
+                    {/* Make Appointment Button */}
+                    <button
+                        className="w-full mt-6 lg:mt-8 rounded-xl h-[56px] sm:h-[60px] lg:h-[68px] bg-[#BBDCE5] text-xl sm:text-2xl lg:text-[32px] font-semibold hover:bg-[#a8cbd6] hover:shadow-lg active:scale-[0.98] transition-all duration-200 cursor-pointer"
+                        onClick={goToNext}
+                    >
+                        Make Appointment
+                    </button>
                 </div>
 
-                <div className="flex-[1.2] flex flex-col items-start mt-8">
-                    <div className="pl-5 flex justify-between gap-70">
-                        <h1 className="text-[32px] font-bold">Select a Location</h1>
-                        <img src="/undo.png" alt="back" className="hover:cursor-pointer" width={46} height={46} onClick={goBack}/>
-                    </div>
-                        <div className="flex flex-col justify-center items-start ml-5 pl-5 text-[24px] font-semibold mt-10 w-[619px] h-[180px] bg-[#BBDCE5] rounded-xl">
-                            <div className="flex justify-between items-center gap-1">
-                                <img src="/lock.png" alt="lock" className="w-[25px] h-[25px]"/>
-                                <p>Safe COD Location Recommendations:</p>
-                            </div>
-                                <>
-                                    <p>- Campus Kemanggisan</p>
-                                    <p>- Campus Syahdan</p>
-                                </>
-                        </div>
-                    <div className="flex flex-col justify-center items-center -mt-20 w-full h-full gap-5 z-100">
-                        <div className="relative w-[600px]">
-                        <input
-                        type="text"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder="Cari alamat..."
-                        className="w-full p-2 border rounded"
-                        />
-                        {suggestions.length > 0 && (
-                        <ul className="absolute z-10 bg-white border w-full mt-1 max-h-60 overflow-y-auto">
-                            {suggestions.map((s: any) => (
-                            <li
-                                key={s.place_id}
-                                onClick={() => handleSelectSuggestion(s)}
-                                className="p-2 hover:bg-gray-200 cursor-pointer"
+                {/* Right Panel - Map & Location Picker */}
+                <div className="flex-1 lg:flex-[1.2] flex flex-col p-6 sm:p-8 lg:p-10 bg-white">
+                    <div className="w-full h-full flex flex-col">
+                        {/* Header with Back Button */}
+                        <div className="flex justify-between items-center mb-4 sm:mb-6">
+                            <h1 className="text-xl sm:text-2xl lg:text-[32px] font-bold">Select a Location</h1>
+                            <button
+                                onClick={goBack}
+                                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                                title="Go Back"
                             >
-                                {s.display_name}
-                            </li>
-                            ))}
-                        </ul>
-                        )}
-                    </div>
-                    <div className="z-0">
-                        <MapContainer
-                        {...({ center: [-6.200000, 106.816666], zoom: 13, scrollWheelZoom: true, style: { height: "400px", width: "600px" } } as any)}
-                        >
-                        <TileLayer
-                            {...({ url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", attribution: "&copy; OpenStreetMap contributors" } as any)}
-                        />
-                        <Marker position={[selectedLocation.lat, selectedLocation.lon]}>
-                            <Popup>{selectedLocation.display_name}</Popup>
-                        </Marker>
-                        <FlyToMarker position={selectedLocation} />
-                        </MapContainer>
-                    </div>
+                                <img
+                                    src="/undo.png"
+                                    alt="back"
+                                    className="w-8 h-8 sm:w-10 sm:h-10 lg:w-[46px] lg:h-[46px] cursor-pointer"
+                                />
+                            </button>
+                        </div>
+
+                        {/* Safe Location Recommendations */}
+                        <div className="flex flex-col justify-center items-start p-4 sm:p-5 lg:p-6 text-base sm:text-lg lg:text-[24px] font-semibold mb-4 sm:mb-6 bg-[#BBDCE5] rounded-xl">
+                            <div className="flex items-center gap-2 mb-2">
+                                <img src="/lock.png" alt="lock" className="w-5 h-5 sm:w-6 sm:h-6 lg:w-[25px] lg:h-[25px]"/>
+                                <p className="text-sm sm:text-base lg:text-[24px]">Safe COD Location Recommendations:</p>
+                            </div>
+                            <div className="text-sm sm:text-base lg:text-[20px] space-y-1">
+                                <p>- Campus Kemanggisan</p>
+                                <p>- Campus Syahdan</p>
+                                <p>- Binus Square Food Court</p>
+                            </div>
+                        </div>
+
+                        {/* Search Input */}
+                        <div className="relative mb-4 sm:mb-6 z-20">
+                            <input
+                                type="text"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                placeholder="Cari alamat..."
+                                className="w-full p-3 sm:p-4 border-2 border-gray-300 rounded-lg text-base sm:text-lg focus:outline-none focus:ring-2 focus:ring-[#BBDCE5] focus:border-transparent"
+                            />
+                            {suggestions.length > 0 && (
+                                <ul className="absolute z-30 bg-white border-2 border-gray-300 w-full mt-2 max-h-48 sm:max-h-60 overflow-y-auto rounded-lg shadow-lg z-100">
+                                    {suggestions.map((s: any) => (
+                                        <li
+                                            key={s.place_id}
+                                            onClick={() => handleSelectSuggestion(s)}
+                                            className="p-3 sm:p-4 hover:bg-[#BBDCE5] hover:text-white cursor-pointer transition-colors text-sm sm:text-base border-b last:border-b-0"
+                                        >
+                                            {s.display_name}
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
+                        </div>
+
+                        {/* Map Container */}
+                        <div className="flex-1 w-full min-h-[300px] sm:min-h-[350px] lg:min-h-[400px] rounded-lg overflow-hidden border-2 border-gray-300 shadow-md z-0">
+                            <MapContainer
+                                {...({
+                                    center: [-6.200000, 106.816666],
+                                    zoom: 13,
+                                    scrollWheelZoom: true,
+                                    style: { height: "100%", width: "100%" }
+                                } as any)}
+                            >
+                                <TileLayer
+                                    {...({
+                                        url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+                                        attribution: "&copy; OpenStreetMap contributors"
+                                    } as any)}
+                                />
+                                <Marker position={[selectedLocation.lat, selectedLocation.lon]}>
+                                    <Popup>{selectedLocation.display_name}</Popup>
+                                </Marker>
+                                <FlyToMarker position={selectedLocation} />
+                            </MapContainer>
+                        </div>
                     </div>
                 </div>
+            </div>
+
+            {/* Helper Text (Mobile) */}
+            <div className="lg:hidden mt-4 text-center text-sm text-gray-600 space-y-1">
+                <p>📍 Search or select a safe location</p>
+                <p>Use the map to pinpoint exact location</p>
             </div>
         </div>
         </>

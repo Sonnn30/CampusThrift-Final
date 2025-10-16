@@ -149,6 +149,50 @@ class CODController extends Controller
     }
 
     /**
+     * Display COD location recommendation page with map
+     */
+    public function showLocationRecommendation()
+    {
+        $user = Auth::user();
+
+        // Check if user is buyer
+        if (!$user->isBuyer()) {
+            return redirect()->back()->with('error', 'Only buyers can make COD appointments.');
+        }
+
+        $date = session('cod_date');
+        $time = session('cod_time');
+        $productId = session('cod_product_id');
+
+        if (!$date || !$time || !$productId) {
+            return redirect()->route('CODDate')->with('error', 'Please complete date and time selection first');
+        }
+
+        $product = Product::findOrFail($productId);
+
+        // Get recommended safe locations
+        $availableLocations = [
+            'Campus Kemanggisan',
+            'Campus Syahdan',
+            'Binus Square Food Court',
+            'Anggrek Campus Library'
+        ];
+
+        return Inertia::render('locationRecommendation', [
+            'product' => [
+                'id' => $product->id,
+                'product_name' => $product->product_name,
+                'product_price' => $product->product_price,
+                'description' => $product->description,
+                'image' => $product->getMedia('product_images')->first()?->getUrl()
+            ],
+            'selectedDate' => $date,
+            'selectedTime' => $time,
+            'availableLocations' => $availableLocations
+        ]);
+    }
+
+    /**
      * Store COD location and create appointment
      */
     public function storeLocation(Request $request)

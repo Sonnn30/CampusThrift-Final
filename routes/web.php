@@ -9,6 +9,7 @@ use App\Http\Controllers\CODController;
 use App\Http\Controllers\MyScheduleController;
 use App\Http\Controllers\TransactionDetailController;
 use App\Http\Controllers\ReviewController;
+use App\Http\Controllers\ChatController;
 
 Route::get('/', [AuthManager::class, 'UserDashboard'])->name('home');
 
@@ -48,6 +49,7 @@ Route::prefix('/COD')->middleware(['auth'])->group(function(){
     Route::get('/time', [CODController::class, 'showTime'])->name('CODTime');
     Route::post('/time', [CODController::class, 'storeTime'])->name('CODTime.store');
     Route::get('/location', [CODController::class, 'showLocation'])->name('CODLocation');
+    Route::get('/location-recommendation', [CODController::class, 'showLocationRecommendation'])->name('CODLocationRecommendation');
     Route::post('/location', [CODController::class, 'storeLocation'])->name('CODLocation.store');
     Route::get('/appointment/{appointment}', [CODController::class, 'show'])->name('CODAppointment.show');
     Route::patch('/appointment/{appointment}/status', [CODController::class, 'updateStatus'])->name('CODAppointment.updateStatus');
@@ -61,9 +63,8 @@ Route::prefix('/Seller')->middleware(['auth', 'seller'])->group(function(){
     Route::get('/TransactionDetail', [TransactionDetailController::class, 'index'])->name('SellerTransactionDetail');
     Route::post('/TransactionDetail/deal', [TransactionDetailController::class, 'dealSeller'])->name('SellerTransactionDeal');
 
-    Route::get('/chat', function(){
-        return Inertia::render('chat');
-    })->name('SellerChat');
+    Route::get('/chatlist', [ChatController::class, 'index'])->name('SellerChatList');
+    Route::get('/chat/{recipientId}', [ChatController::class, 'show'])->name('SellerChat');
 
     Route::get('/review', [ReviewController::class, 'show'])->name('SellerReview');
     Route::post('/review', [ReviewController::class, 'store'])->name('SellerReview.store');
@@ -95,11 +96,11 @@ Route::get('/Buyer/ProductDetail/{id}', [ProductController::class, 'show'])
     ->name('BuyerProductDetail');
 
 
-
 Route::middleware(['auth'])->group(function () {
     Route::get('/Profile/{role}', [ProfileController::class, 'show']);
     Route::post('/Profile/{role}', [ProfileController::class, 'storeOrUpdate']);
     Route::delete('/Profile/{role}', [ProfileController::class, 'destroy']);
+    Route::post('/Profile/{role}/report', [ProfileController::class, 'submitReport'])->name('profile.submitReport');
 });
 
 
@@ -116,9 +117,8 @@ Route::prefix('/Buyer')->middleware(['auth', 'buyer'])->group(function(){
 
     Route::get('/TransactionDetail', [TransactionDetailController::class, 'index'])->name('BuyerTransactionDetail');
     Route::post('/TransactionDetail/deal', [TransactionDetailController::class, 'dealBuyer'])->name('BuyerTransactionDeal');
-    Route::get('/chat', function(){
-        return Inertia::render('chat');
-    })->name("BuyerChat");
+    Route::get('/chatlist', [ChatController::class, 'index'])->name('BuyerChatList');
+    Route::get('/chat/{recipientId}', [ChatController::class, 'show'])->name("BuyerChat");
     Route::get('/review', [ReviewController::class, 'show'])->name('BuyerReview');
     Route::post('/review', [ReviewController::class, 'store'])->name('BuyerReview.store');
 });

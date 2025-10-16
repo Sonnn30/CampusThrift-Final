@@ -33,10 +33,22 @@ export default function TransactionDetail({ role, transactions = [] as TxnRow[] 
     const [selected8, setSelected8] = useState(false)
     const stars = [1, 2, 3, 4, 5]
     const goToNextB = () =>{
-        window.location.href = '/Seller/chat'
+        // Seller chat dengan buyer dari transaksi pertama
+        const buyerId = rows[0]?.buyer_id;
+        if (buyerId) {
+            window.location.href = `/Seller/chat/${buyerId}`;
+        } else {
+            alert('Buyer information not available');
+        }
     }
     const goToNextS = () =>{
-        window.location.href = '/Buyer/chat'
+        // Buyer chat dengan seller dari transaksi pertama
+        const sellerId = rows[0]?.seller_id;
+        if (sellerId) {
+            window.location.href = `/Buyer/chat/${sellerId}`;
+        } else {
+            alert('Seller information not available');
+        }
     }
 
     const goToNext = () =>{

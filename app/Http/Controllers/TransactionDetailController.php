@@ -60,6 +60,7 @@ class TransactionDetailController extends Controller
             return [
                 'time' => substr($a->time, 0, 5),
                 'buyer' => $txn->buyer ?? ($a->user?->name ?? 'Unknown'),
+                'buyer_id' => $a->users_id,
                 'method' => $txn->method ?? 'COD',
                 'id' => $txn->external_id ?? ('APT-' . $a->id),
                 'appointment_id' => $a->id,
@@ -71,6 +72,7 @@ class TransactionDetailController extends Controller
                 'location' => $a->locations,
                 'item' => $a->product?->product_name,
                 'seller' => $a->product?->user?->name,
+                'seller_id' => $a->product?->user_id,
                 'image' => $imageUrl,
             ];
         });

@@ -12,22 +12,40 @@ class Message implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
+    public int $conversationId;
+    public int $messageId;
     public string $username;
     public string $message;
+    public int $senderId;
 
-    public function __construct(string $username, string $message)
+    public function __construct(int $conversationId, int $messageId, string $username, string $message, int $senderId)
     {
+        $this->conversationId = $conversationId;
+        $this->messageId = $messageId;
         $this->username = $username;
         $this->message = $message;
+        $this->senderId = $senderId;
     }
 
     public function broadcastOn(): array
     {
-        return [new Channel('chat')]; // <- harus pakai Channel object
+        // Broadcast ke channel khusus untuk conversation ini
+        return [new Channel('chat.' . $this->conversationId)];
     }
 
     public function broadcastAs(): string
     {
         return 'message';
+    }
+
+    public function broadcastWith(): array
+    {
+        return [
+            'id' => $this->messageId,
+            'conversation_id' => $this->conversationId,
+            'message' => $this->message,
+            'sender_name' => $this->username,
+            'sender_id' => $this->senderId,
+        ];
     }
 }

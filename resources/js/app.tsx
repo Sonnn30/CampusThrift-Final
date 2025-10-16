@@ -4,6 +4,14 @@ import { createInertiaApp } from '@inertiajs/react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { createRoot } from 'react-dom/client';
 import { initializeTheme } from './hooks/use-appearance';
+import axios from 'axios';
+
+// Configure axios globally
+axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
+const token = document.head.querySelector('meta[name="csrf-token"]');
+if (token instanceof HTMLMetaElement) {
+    axios.defaults.headers.common['X-CSRF-TOKEN'] = token.content;
+}
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
