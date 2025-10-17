@@ -10,23 +10,29 @@
 ### Step 1: Create Railway Volume
 
 1. **Buka Railway Dashboard**
-   - Go to: https://railway.app/project/[your-project-id]
-   - Pilih service `CampusThrift-Final`
+   - Go to: https://railway.app/
+   - Pilih project `daring-consideration` (atau nama project Anda)
+   - Anda akan melihat tampilan canvas dengan service `CampusThrift-Final` dan `MySQL`
 
-2. **Add Volume**
-   - Click tab **"Variables"** di sidebar
-   - Scroll ke bawah, cari section **"Volumes"**
-   - Click **"+ New Volume"**
-   - Volume Settings:
-     ```
-     Mount Path: /app/storage/app/public
-     Size: 1GB (cukup untuk development)
-     ```
-   - Click **"Add"**
+2. **Add Volume via Settings**
+   - **KLIK** service `CampusThrift-Final` di canvas
+   - Di panel kanan, klik tab **"Settings"** (icon gear ⚙️)
+   - Scroll ke bawah sampai menemukan section **"Volumes"**
+   - Klik button **"+ Add Volume"** atau **"New Volume"**
 
-3. **Redeploy**
+3. **Configure Volume**
+   - **Mount Path**: `/app/storage/app/public`
+   - Klik **"Add"** atau **"Save"**
+   
+4. **ATAU via Service Menu** (Alternative):
+   - Klik **3 dots (•••)** di pojok kanan atas service card
+   - Pilih **"Add Volume"**
+   - Set **Mount Path**: `/app/storage/app/public`
+   - Klik **"Add"**
+
+5. **Redeploy**
    - Railway akan otomatis redeploy service Anda
-   - Wait sampai deployment selesai
+   - Wait sampai deployment selesai (lihat di "Deployments" tab)
 
 ### Step 2: Update `nixpacks.toml`
 
