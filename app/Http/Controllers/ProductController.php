@@ -128,7 +128,7 @@ public function edit(Product $product)
         'shipping_method' => 'nullable|array',
         'location'        => 'nullable|string',
         'category'        => 'nullable|string',
-        'images.*' => 'nullable|image|max:5120'
+        'images.*' => 'nullable|image|max:10240'
     ]);
 
     $product = Product::create([
@@ -146,8 +146,8 @@ public function edit(Product $product)
         foreach ($request->file('images') as $file) {
             if ($file->isValid()) {
                 $media = MediaUploader::fromSource($file)
-                    ->toDisk('cloudinary')      // simpan di Cloudinary
-                    ->toDirectory('products')   // folder virtual di Cloudinary
+                    ->toDisk('s3')              // simpan di AWS S3
+                    ->toDirectory('products')   // folder di bucket
                     ->upload();
 
                 $product->attachMedia($media, 'product_images');
@@ -172,7 +172,7 @@ public function update(Request $request, Product $product)
         'shipping_method' => 'nullable|array',
         'location'        => 'nullable|string',
         'category'        => 'nullable|string',
-        'images.*'        => 'nullable|image|max:2048',
+        'images.*'        => 'nullable|image|max:10240',
     ]);
 
     $shipping = $request->shipping_method;
@@ -206,7 +206,7 @@ public function update(Request $request, Product $product)
         foreach ($request->file('images') as $file) {
             if ($file->isValid()) {
                 $media = MediaUploader::fromSource($file)
-                    ->toDisk('cloudinary')
+                    ->toDisk('s3')
                     ->toDirectory('products')
                     ->upload();
 

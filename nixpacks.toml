@@ -3,8 +3,7 @@ nixPkgs = ['php82', 'php82Extensions.pdo', 'php82Extensions.pdo_mysql', 'php82Ex
 
 [phases.install]
 cmds = [
-  'composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist || true',
-  'composer require cloudinary-labs/cloudinary-laravel:^2.0 --no-interaction --no-progress -W',
+  'composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist',
   'npm ci --legacy-peer-deps'
 ]
 
