@@ -21,6 +21,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
 {
+    // Force HTTPS in production
+    if (config('app.env') === 'production') {
+        \URL::forceScheme('https');
+    }
+
     Inertia::share([
         // Data yang selalu dikirim ke semua halaman React
         'auth' => function () {
