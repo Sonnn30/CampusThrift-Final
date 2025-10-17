@@ -1,10 +1,10 @@
 [phases.setup]
-nixPkgs = ['php82', 'php82Extensions.pdo', 'php82Extensions.pdo_mysql', 'php82Extensions.mbstring', 'php82Extensions.xml', 'php82Extensions.curl', 'php82Extensions.zip', 'php82Extensions.gd', 'nodejs-18_x']
+nixPkgs = ['php82', 'php82Extensions.pdo', 'php82Extensions.pdo_mysql', 'php82Extensions.mbstring', 'php82Extensions.xml', 'php82Extensions.curl', 'php82Extensions.zip', 'php82Extensions.gd', 'php82Packages.composer', 'nodejs-18_x']
 
 [phases.install]
 cmds = [
-  'composer install --no-dev --optimize-autoloader --no-interaction',
-  'npm ci'
+  'composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist',
+  'npm ci --legacy-peer-deps'
 ]
 
 [phases.build]
