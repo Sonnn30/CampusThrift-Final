@@ -79,8 +79,8 @@ class EvidenceController extends Controller
             // Generate unique filename with ID
             $fileName = time() . '_' . $appointment->id . '_' . $user->id . '.' . $file->getClientOriginalExtension();
 
-            // Store file in storage/app/public/evidence
-            $filePath = $file->storeAs('evidence', $fileName, 'public');
+            // Store file to Cloudinary under folder "evidence"
+            $filePath = $file->storeAs('evidence', $fileName, 'cloudinary');
 
             // Create evidence record
             $evidence = Evidence::create([
@@ -146,9 +146,9 @@ class EvidenceController extends Controller
         }
 
         try {
-            // Delete file from storage
-            if (Storage::disk('public')->exists($evidence->file_path)) {
-                Storage::disk('public')->delete($evidence->file_path);
+            // Delete file from Cloudinary storage
+            if (Storage::disk('cloudinary')->exists($evidence->file_path)) {
+                Storage::disk('cloudinary')->delete($evidence->file_path);
             }
 
             // Delete record

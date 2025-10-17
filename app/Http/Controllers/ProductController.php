@@ -146,8 +146,8 @@ public function edit(Product $product)
         foreach ($request->file('images') as $file) {
             if ($file->isValid()) {
                 $media = MediaUploader::fromSource($file)
-                    ->toDisk('public')          // simpan di disk public
-                    ->toDirectory('products')   // folder storage/app/public/products
+                    ->toDisk('cloudinary')      // simpan di Cloudinary
+                    ->toDirectory('products')   // folder virtual di Cloudinary
                     ->upload();
 
                 $product->attachMedia($media, 'product_images');
@@ -206,7 +206,7 @@ public function update(Request $request, Product $product)
         foreach ($request->file('images') as $file) {
             if ($file->isValid()) {
                 $media = MediaUploader::fromSource($file)
-                    ->toDisk('public')
+                    ->toDisk('cloudinary')
                     ->toDirectory('products')
                     ->upload();
 
