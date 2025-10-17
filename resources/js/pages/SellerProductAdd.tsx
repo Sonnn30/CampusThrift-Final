@@ -153,6 +153,8 @@ export default function SellerProductAdd({ role }: SellerProductAddProps) {
                 });
                 setSelectedFile([]);
                 setFileError("");
+                // Navigate to product list after successful creation
+                Inertia.visit('/Seller/product');
             },
         });
     };
