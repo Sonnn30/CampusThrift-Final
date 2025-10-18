@@ -347,8 +347,6 @@ export default function TransactionDetail({ role, transactions = [] as TxnRow[] 
                     </div>
                 </div>
             )}
-        </div>
-    </div>
         </>
     )
 }
