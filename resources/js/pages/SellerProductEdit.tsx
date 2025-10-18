@@ -141,7 +141,7 @@ export default function SellerProductEdit({ product: initialProduct }) {
         selectedFile.forEach((file) => {
             formData.append("images[]", file);
         });
-        
+
         removedImages.forEach((imgUrl) => {
             formData.append("removed_images[]", imgUrl);
         });
