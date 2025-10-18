@@ -145,10 +145,20 @@ public function edit(Product $product)
     if ($request->hasFile('images')) {
         foreach ($request->file('images') as $file) {
             if ($file->isValid()) {
-                $media = MediaUploader::fromSource($file)
-                    ->toDisk('s3')              // simpan di AWS S3
-                    ->toDirectory('products')   // folder di bucket
-                    ->upload();
+                try {
+                    // Try S3 first, fallback to public if fails
+                    $media = MediaUploader::fromSource($file)
+                        ->toDisk('s3')              // simpan di AWS S3
+                        ->toDirectory('products')   // folder di bucket
+                        ->upload();
+                } catch (\Exception $e) {
+                    // Fallback to public storage if S3 fails
+                    Log::warning('S3 upload failed, using public storage: ' . $e->getMessage());
+                    $media = MediaUploader::fromSource($file)
+                        ->toDisk('public')          // fallback ke local storage
+                        ->toDirectory('products')   // folder di storage/app/public
+                        ->upload();
+                }
 
                 $product->attachMedia($media, 'product_images');
             }
@@ -205,10 +215,20 @@ public function update(Request $request, Product $product)
     if ($request->hasFile('images')) {
         foreach ($request->file('images') as $file) {
             if ($file->isValid()) {
-                $media = MediaUploader::fromSource($file)
-                    ->toDisk('s3')
-                    ->toDirectory('products')
-                    ->upload();
+                try {
+                    // Try S3 first, fallback to public if fails
+                    $media = MediaUploader::fromSource($file)
+                        ->toDisk('s3')
+                        ->toDirectory('products')
+                        ->upload();
+                } catch (\Exception $e) {
+                    // Fallback to public storage if S3 fails
+                    Log::warning('S3 upload failed, using public storage: ' . $e->getMessage());
+                    $media = MediaUploader::fromSource($file)
+                        ->toDisk('public')
+                        ->toDirectory('products')
+                        ->upload();
+                }
 
                 $product->attachMedia($media, 'product_images');
             }
