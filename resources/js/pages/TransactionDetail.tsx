@@ -1,6 +1,8 @@
 import { useMemo, useState } from "react"
 import { router, usePage } from "@inertiajs/react"
 
+// TransactionDetail component with responsive design
+
 type TxnRow = {
     time: string;
     buyer: string;
