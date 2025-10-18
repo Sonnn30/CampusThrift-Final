@@ -13,7 +13,7 @@
         -ms-user-select: none;
         user-select: none;
     }
-    
+
     /* Allow text selection in input areas */
     input, textarea, [contenteditable="true"], [contenteditable] {
         -webkit-user-select: text;
@@ -21,7 +21,7 @@
         -ms-user-select: text;
         user-select: text;
     }
-    
+
     /* Allow text selection in specific elements that need it */
     .selectable, .allow-select {
         -webkit-user-select: text;
