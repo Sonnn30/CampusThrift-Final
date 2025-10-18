@@ -171,7 +171,7 @@ public function edit(Product $product)
     ]);
 
         return to_route('SellerProduct')->with('success', 'Product created successfully!');
-        
+
     } catch (\Illuminate\Validation\ValidationException $e) {
         Log::error('Validation error:', $e->errors());
         return back()->withErrors($e->errors())->withInput();
