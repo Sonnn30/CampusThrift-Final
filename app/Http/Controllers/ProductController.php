@@ -120,16 +120,17 @@ public function edit(Product $product)
     // Simpan product baru
     public function store(Request $request)
 {
-    // dd($request->all());
-    $request->validate([
-        'product_name'    => 'required|string|max:255',
-        'product_price'   => 'required|numeric',
-        'description'     => 'nullable|string',
-        'shipping_method' => 'nullable|array',
-        'location'        => 'nullable|string',
-        'category'        => 'nullable|string',
-        'images.*' => 'nullable|image|max:10240'
-    ]);
+    try {
+        // dd($request->all());
+        $request->validate([
+            'product_name'    => 'required|string|max:255',
+            'product_price'   => 'required|numeric|min:1',
+            'description'     => 'required|string',
+            'shipping_method' => 'required|array|min:1',
+            'location'        => 'required|string',
+            'category'        => 'required|string',
+            'images.*' => 'required|image|max:10240'
+        ]);
 
     $product = Product::create([
         'user_id'         => Auth::id(),
@@ -169,7 +170,15 @@ public function edit(Product $product)
         'image_count' => $request->hasFile('images') ? count($request->file('images')) : 0,
     ]);
 
-    return to_route('SellerProduct')->with('success', 'Product created successfully!');
+        return to_route('SellerProduct')->with('success', 'Product created successfully!');
+        
+    } catch (\Illuminate\Validation\ValidationException $e) {
+        Log::error('Validation error:', $e->errors());
+        return back()->withErrors($e->errors())->withInput();
+    } catch (\Exception $e) {
+        Log::error('Error creating product:', ['error' => $e->getMessage()]);
+        return back()->with('error', 'Failed to create product. Please try again.')->withInput();
+    }
 }
 
 // Update product

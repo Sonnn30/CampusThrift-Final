@@ -121,14 +121,40 @@ export default function SellerProductAdd({ role }: SellerProductAddProps) {
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
 
+        // Validation
         if (selectedFile.length === 0) {
             setFileError("Please upload at least one image.");
             return;
         }
 
+        if (!product.product_name.trim()) {
+            alert('Please enter a product name');
+            return;
+        }
+
+        if (!product.product_price.trim()) {
+            alert('Please enter a product price');
+            return;
+        }
+
+        if (!product.description.trim()) {
+            alert('Please enter a product description');
+            return;
+        }
+
+        if (product.shipping_method.length === 0) {
+            alert('Please select at least one COD method');
+            return;
+        }
+
+        if (!product.location.trim()) {
+            alert('Please select a location');
+            return;
+        }
+
         const formData = new FormData();
         formData.append("product_name", product.product_name);
-        formData.append("product_price", product.product_price);
+        formData.append("product_price", product.product_price.replace(/[^\d]/g, '')); // Remove non-numeric characters
         formData.append("description", product.description);
         formData.append("location", product.location);
         formData.append("category", product.category);
@@ -156,6 +182,19 @@ export default function SellerProductAdd({ role }: SellerProductAddProps) {
                 // Navigate to product list after successful creation
                 Inertia.visit('/Seller/product');
             },
+            onError: (errors) => {
+                console.error('Form submission errors:', errors);
+                if (errors.product_price) {
+                    alert('Please enter a valid price (numbers only)');
+                } else if (errors.product_name) {
+                    alert('Please enter a product name');
+                } else {
+                    alert('Error adding product. Please try again.');
+                }
+            },
+            onFinish: () => {
+                console.log('Form submission finished');
+            }
         });
     };
 
