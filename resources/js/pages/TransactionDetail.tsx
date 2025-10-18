@@ -183,6 +183,8 @@ export default function TransactionDetail({ role, transactions = [] as TxnRow[] 
                         </div>
                     </div>
                 </div>
+            </div>
+
             {pop &&(
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
                     <div className="flex flex-col justify-start items-start p-4 sm:p-6 lg:p-10 w-full max-w-[838px] max-h-[90vh] overflow-y-auto bg-white border-3 rounded-3xl">
