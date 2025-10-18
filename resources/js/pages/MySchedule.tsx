@@ -96,7 +96,7 @@ export default function MySchedule({role, appointments, events}: any) {
             </div>
 
             {/* DayPicker Calendar */}
-            <div className="w-full px-2 sm:px-4 py-4">
+            <div className="w-full sm:px-4 py-4">
               <DayPicker
                 mode="single"
                 selected={selected.toDate()}
