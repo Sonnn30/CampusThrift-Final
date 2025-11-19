@@ -1,5 +1,6 @@
 import React from "react";
 import dayjs from "dayjs";
+import useTranslation from "@/Hooks/useTranslation";
 
 export default function Month({ daysInWeek, events = [], role}: any) {
   // Debug: Log events to console
@@ -91,6 +92,8 @@ export default function Month({ daysInWeek, events = [], role}: any) {
     return ""; // Default styling
   }
 
+  const {t} = useTranslation()
+
   function getEventsForCell(day: any, hour: any) {
     const targetDate = day.format("YYYY-MM-DD");
     const matchingEvents = events.filter(
@@ -165,8 +168,15 @@ export default function Month({ daysInWeek, events = [], role}: any) {
 
     return ""; // Default background
   }
+  const getLocale = () => {
+    const path = typeof window !== 'undefined' ? window.location.pathname : '';
+    const match = path.match(/^\/([a-z]{2})\//);
+    return match ? match[1] : 'id';
+  };
+
   function goToTransactionDetail(appointmentId: any){
-    window.location.href = `/${role}/TransactionDetail?appointment_id=${appointmentId}`
+    const locale = getLocale();
+    window.location.href = `/${locale}/${role}/TransactionDetail?appointment_id=${appointmentId}`
   }
 
 
@@ -175,7 +185,7 @@ export default function Month({ daysInWeek, events = [], role}: any) {
       <div className="grid grid-cols-8 min-w-[900px]">
         {/* Header kolom jam */}
         <div className="sticky top-0 z-20 border-b-2 border-t-2 border-[#BBDCE5] flex justify-center items-center font-semibold h-[40px]">
-          Hour
+          {t('Hour')}
         </div>
 
         {/* Header hari */}

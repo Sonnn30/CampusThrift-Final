@@ -2,11 +2,15 @@ import { useState } from "react";
 import { usePage } from "@inertiajs/react";
 import ProductCard_ProductGrid from "./ProductCard_ProductGrid";
 import { Inertia } from "@inertiajs/inertia";
+import useTranslation from "@/Hooks/useTranslation";
+import ProductCatalogNavbar from "./ProductCatalogNavbar";
 
 export default function ProductDetail() {
   const { props } = usePage();
   const { role = "Buyer", product: productRaw, otherProducts = [] } = props;
   const product: ProductType = productRaw as ProductType;
+  const user = (props as any)?.auth?.user ?? props?.user ?? null;
+  const isLoggedIn = Boolean(user);
 
   // Ambil maksimal 5 gambar dari backend
   const images = Array.isArray(product?.images)
@@ -41,26 +45,35 @@ export default function ProductDetail() {
   const [selectedImage, setSelectedImage] = useState(images[0] || "/placeholder.jpg");
 
   // Navigasi
+  const getLocale = () => {
+    const path = window.location.pathname;
+    const match = path.match(/^\/([a-z]{2})\//);
+    return match ? match[1] : 'id';
+  };
+
   function goToSellerPage() {
     const sellerId = product?.seller_id ?? null;
+    const locale = getLocale();
     if (sellerId) {
       // Navigate to buyer-facing product listing filtered by seller id
-      window.location.href = `/Seller/product?user_id=${sellerId}`;
+      window.location.href = `/${locale}/Seller/product?user_id=${sellerId}`;
     } else {
       // fallback to current role's product page
-      window.location.href = `/${role}/product`;
+      window.location.href = `/${locale}/${role}/product`;
     }
   }
 
   function goToEditPage() {
     if (product?.id) {
-      Inertia.visit(`/Seller/product/edit/${product.id}`);
+      const locale = getLocale();
+      Inertia.visit(`/${locale}/Seller/product/edit/${product.id}`);
     }
   }
 
   function goToMakeAppointment() {
     if (role === "Buyer") {
-      window.location.href = `/COD/date?product_id=${product.id}`;
+      const locale = getLocale();
+      window.location.href = `/${locale}/COD/date?product_id=${product.id}`;
     } else {
       alert("Just Buyer Can Make Appointment! Please Log In With Buyer Role");
     }
@@ -68,16 +81,22 @@ export default function ProductDetail() {
 
   function goToChat() {
     const sellerId = product?.seller_id;
+    const locale = getLocale();
     if (sellerId && role === "Buyer") {
-      window.location.href = `/Buyer/chat/${sellerId}`;
+      window.location.href = `/${locale}/Buyer/chat/${sellerId}`;
     } else if (sellerId && role === "Seller") {
-      window.location.href = `/Seller/chat/${sellerId}`;
+      window.location.href = `/${locale}/Seller/chat/${sellerId}`;
     } else {
       alert("Chat not available");
     }
   }
+
+  const {t} = useTranslation()
   return (
-    <div className="flex flex-col justify-center items-center mx-auto px-3 sm:px-4 md:px-6 py-6 md:py-10 space-y-6 md:space-y-10 bg-[#ECEEDF] min-h-screen">
+    <>
+      <ProductCatalogNavbar user={user} role={role} isLoggedIn={isLoggedIn} compact />
+    <div className="flex flex-col justify-center items-center mx-auto px-3 sm:px-4 md:px-6 pt-10 pb-6 md:pb-10 space-y-6 md:space-y-10 bg-[#ECEEDF] min-h-screen">
+
       {/* Product Detail Section */}
       <div className="w-full max-w-[1400px] mx-auto">
         <div className="flex flex-col lg:flex-row gap-6 lg:gap-10">
@@ -132,7 +151,7 @@ export default function ProductDetail() {
 
             {/* Description */}
             <div className="mb-4 lg:mb-6">
-              <h2 className="text-lg font-semibold mb-2">Description:</h2>
+              <h2 className="text-lg font-semibold mb-2">{t('Description')}:</h2>
               <ul className="list-disc list-inside text-gray-700 space-y-1 text-sm sm:text-base">
                 {Array.isArray(product?.description) ? (
                   product.description.map((d, i) => <li key={i}>{d}</li>)
@@ -144,7 +163,7 @@ export default function ProductDetail() {
 
             {/* Shipping Information */}
             <div className="flex flex-col mb-4 lg:mb-6">
-              <h2 className="text-lg font-semibold mb-2">Shipping Information</h2>
+              <h2 className="text-lg font-semibold mb-2">{t('Shipping')}</h2>
               <div className="flex flex-col text-sm text-gray-700 w-full">
                 {/* Shipping Methods */}
                 <div className="mb-3 flex border rounded-lg overflow-hidden divide-x min-h-[60px] lg:h-[66px]">
@@ -169,7 +188,7 @@ export default function ProductDetail() {
                     ))
                   ) : (
                     <div className="px-3 py-2 text-gray-500 w-full text-center">
-                      No shipping methods available.
+                      {t('NoShipping')}
                     </div>
                   )}
                 </div>
@@ -195,7 +214,7 @@ export default function ProductDetail() {
                       <span className="text-gray-800 text-xs sm:text-sm">
                         ({product?.shipping?.ratings ?? 0}){" "}
                         <span className="hidden sm:inline">
-                          {product?.shipping?.reviews ?? 0} Reviews
+                          {product?.shipping?.reviews ?? 0} {t('Reviews')}
                         </span>
                         <span className="sm:hidden">
                           {product?.shipping?.reviews ?? 0}
@@ -225,7 +244,7 @@ export default function ProductDetail() {
                 onClick={goToMakeAppointment}
               >
                 <button className="cursor-pointer px-2">
-                  <span className="hidden sm:inline">Make Appointment</span>
+                  <span className="hidden sm:inline">{t('Make Appointment')}</span>
                   <span className="sm:hidden">Appointment</span>
                 </button>
               </div>
@@ -245,7 +264,7 @@ export default function ProductDetail() {
 
       {/* Reviews Section */}
       <div className="flex flex-col w-full max-w-[1400px] mx-auto">
-        <h2 className="text-xl sm:text-2xl font-bold mb-4">Reviews</h2>
+        <h2 className="text-xl sm:text-2xl font-bold mb-4">{t('Reviews')}</h2>
         <div className="flex gap-3 sm:gap-4 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200">
           {Array.isArray(product?.reviews) && product.reviews.length > 0 ? (
             product.reviews.map((rev: any, i: number) => (
@@ -262,14 +281,14 @@ export default function ProductDetail() {
               </div>
             ))
           ) : (
-            <p className="text-gray-500 text-sm sm:text-base">No reviews available yet.</p>
+            <p className="text-gray-500 text-sm sm:text-base">{t('NoReview')}</p>
           )}
         </div>
       </div>
 
       {/* Another Items Section */}
       <div className="w-full max-w-[1400px] mx-auto">
-        <h1 className="text-2xl sm:text-3xl lg:text-[48px] font-bold mb-4 lg:mb-6">Another Item</h1>
+        <h1 className="text-2xl sm:text-3xl lg:text-[48px] font-bold mb-4 lg:mb-6">{t('Another Item')}</h1>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5 lg:gap-6">
           {Array.isArray(otherProducts) && otherProducts.length > 0 ? (
             otherProducts.map((p) => (
@@ -277,11 +296,12 @@ export default function ProductDetail() {
             ))
           ) : (
             <p className="text-gray-500 col-span-full text-center text-sm sm:text-base">
-              Tidak ada produk lain untuk ditampilkan.
+              {t('NoProduct')}
             </p>
           )}
         </div>
       </div>
     </div>
+    </>
   );
 }

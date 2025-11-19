@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { usePage } from "@inertiajs/react";
 import Pusher from "pusher-js";
 import axios from "axios";
+import useTranslation from "@/Hooks/useTranslation";
 
 interface Message {
   id: number;
@@ -81,6 +82,8 @@ export default function Chat({ role }: { role: string }) {
     }
   };
 
+  const {t} = useTranslation()
+
   return (
     <div className="w-full h-screen flex flex-col bg-[#BBDCE5] overflow-hidden">
       {/* Header - Fixed Top */}
@@ -114,7 +117,7 @@ export default function Chat({ role }: { role: string }) {
           <div className="flex flex-col gap-3 sm:gap-4 lg:gap-5">
             {chat.length === 0 && (
               <div className="text-center py-12 text-gray-500">
-                <p className="text-sm sm:text-base">No messages yet. Start the conversation!</p>
+                <p className="text-sm sm:text-base">{t('NoMessages')}</p>
               </div>
             )}
 
@@ -172,7 +175,7 @@ export default function Chat({ role }: { role: string }) {
           <div className="flex-1 relative">
             <input
               type="text"
-              placeholder="Type a message..."
+              placeholder={t('Type')}
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               className="w-full px-3 sm:px-4 lg:px-5 py-2 sm:py-3 lg:py-4 text-sm sm:text-base lg:text-lg border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-[#9BC0E6] focus:border-transparent placeholder:text-gray-400 bg-gray-50"

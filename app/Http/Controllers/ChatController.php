@@ -15,8 +15,9 @@ class ChatController extends Controller
     /**
      * Show chat page with specific user
      */
-    public function show($recipientId)
+    public function show(Request $request)
     {
+        $recipientId = $request->route('recipientId');
         $currentUser = Auth::user();
         $recipient = User::findOrFail($recipientId);
 

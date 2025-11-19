@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react"
 import { router, usePage } from "@inertiajs/react"
+import useTranslation from "@/Hooks/useTranslation";
 
 // TransactionDetail component with responsive design
 
@@ -34,11 +35,18 @@ export default function TransactionDetail({ role, transactions = [] as TxnRow[] 
     const [selected7, setSelected7] = useState(false)
     const [selected8, setSelected8] = useState(false)
     const stars = [1, 2, 3, 4, 5]
+    const getLocale = () => {
+        const path = window.location.pathname;
+        const match = path.match(/^\/([a-z]{2})\//);
+        return match ? match[1] : 'id';
+    };
+
     const goToNextB = () =>{
         // Seller chat dengan buyer dari transaksi pertama
         const buyerId = rows[0]?.buyer_id;
+        const locale = getLocale();
         if (buyerId) {
-            window.location.href = `/Seller/chat/${buyerId}`;
+            window.location.href = `/${locale}/Seller/chat/${buyerId}`;
         } else {
             alert('Buyer information not available');
         }
@@ -46,8 +54,9 @@ export default function TransactionDetail({ role, transactions = [] as TxnRow[] 
     const goToNextS = () =>{
         // Buyer chat dengan seller dari transaksi pertama
         const sellerId = rows[0]?.seller_id;
+        const locale = getLocale();
         if (sellerId) {
-            window.location.href = `/Buyer/chat/${sellerId}`;
+            window.location.href = `/${locale}/Buyer/chat/${sellerId}`;
         } else {
             alert('Seller information not available');
         }
@@ -56,7 +65,8 @@ export default function TransactionDetail({ role, transactions = [] as TxnRow[] 
     const goToNext = () =>{
         const appointmentId = rows[0]?.appointment_id;
         if (!appointmentId) return;
-        const rolePath = serverRole === 'Seller' ? '/Seller/TransactionDetail/deal' : '/Buyer/TransactionDetail/deal';
+        const locale = getLocale();
+        const rolePath = serverRole === 'Seller' ? `/${locale}/Seller/TransactionDetail/deal` : `/${locale}/Buyer/TransactionDetail/deal`;
         router.post(rolePath, { appointment_id: appointmentId }, {
             preserveScroll: true,
             onSuccess: () => {
@@ -70,12 +80,16 @@ export default function TransactionDetail({ role, transactions = [] as TxnRow[] 
         });
     }
     function goToProfileB(){
-        window.location.href = `/Buyer/Profile`
+        const locale = getLocale();
+        window.location.href = `/${locale}/Profile/Buyer`
     }
     function goToProfileS(){
-        window.location.href = `/Seller/Profile`
+        const locale = getLocale();
+        window.location.href = `/${locale}/Profile/Seller`
     }
     const currency = useMemo(() => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }), []);
+
+    const {t} = useTranslation()
 
     return(
         <>
@@ -87,7 +101,7 @@ export default function TransactionDetail({ role, transactions = [] as TxnRow[] 
                             <div className={`flex justify-center items-center w-32 sm:w-[170px] h-8 sm:h-[37px] mt-6 sm:mt-12 mr-4 sm:mr-12 rounded-4xl ${
                                 rows[0].status === 'confirmed' ? 'bg-[#68B143]' : rows[0].status === 'rejected' ? 'bg-[#F64848]' : 'bg-[#9BC0E6]'
                             }`}>
-                                <p className="text-sm sm:text-[20px] text-white">{rows[0].status?.charAt(0).toUpperCase() + rows[0].status?.slice(1) || 'Pending'}</p>
+                                <p className="text-sm sm:text-[20px] text-white">{t(rows[0].status?.charAt(0).toUpperCase() + rows[0].status?.slice(1) || 'Pending')}</p>
                             </div>
                         )}
                     </div>
@@ -106,25 +120,25 @@ export default function TransactionDetail({ role, transactions = [] as TxnRow[] 
                             <div className="flex flex-col lg:flex-row justify-between gap-6 sm:gap-8 lg:gap-30 w-full">
                                 <div className="flex flex-col gap-3 sm:gap-5 w-full lg:w-auto">
                                     <div className="flex flex-col w-full lg:w-[300px]">
-                                        <p className="text-sm sm:text-[20px] font-bold">Item</p>
+                                        <p className="text-sm sm:text-[20px] font-bold">{t('Item')}</p>
                                         <h1 className="text-lg sm:text-xl lg:text-[28px]">{rows[0]?.item || '-'}</h1>
                                     </div>
                                     <div className="flex flex-col">
-                                        <p className="text-sm sm:text-[20px] font-bold">Time</p>
+                                        <p className="text-sm sm:text-[20px] font-bold">{t('Time')}</p>
                                         <h1 className="text-lg sm:text-xl lg:text-[28px]">{rows[0]?.time || '-'}</h1>
                                     </div>
                                     <div className="flex flex-col gap-2">
-                                        <p className="text-sm sm:text-[20px] font-bold">Location</p>
+                                        <p className="text-sm sm:text-[20px] font-bold">{t('Location')}</p>
                                         <h1 className="text-sm sm:text-base lg:text-[16px]">{rows[0]?.location || '-'}</h1>
                                     </div>
                                 </div>
                                 <div className="flex flex-col gap-3 sm:gap-5 w-full lg:w-auto">
                                     <div className="flex flex-col">
-                                        <p className="text-sm sm:text-[20px] font-bold">Method</p>
+                                        <p className="text-sm sm:text-[20px] font-bold">{t('Method')}</p>
                                         <h1 className="text-lg sm:text-xl lg:text-[28px]">{rows[0]?.method || '-'}</h1>
                                     </div>
                                     <div className="flex flex-col">
-                                        <p className="text-sm sm:text-[20px] font-bold">Date</p>
+                                        <p className="text-sm sm:text-[20px] font-bold">{t('Date')}</p>
                                         <h1 className="text-lg sm:text-xl lg:text-[28px]">{rows[0]?.date || '-'}</h1>
                                     </div>
                                 </div>
@@ -174,10 +188,10 @@ export default function TransactionDetail({ role, transactions = [] as TxnRow[] 
                                 {rows[0].status !== 'pending' && rows[0].status !== 'rejected' ? (
                                     <>
                                         <div className="flex justify-center items-center w-full sm:w-[441px] h-12 sm:h-[52px] bg-[#76DD5F] rounded-2xl hover:cursor-pointer transition-colors hover:bg-[#5cb85c]" onClick={goToNext}>
-                                            <button className="text-lg sm:text-xl lg:text-[32px] hover:cursor-pointer font-medium" onClick={goToNext}>Deal</button>
+                                            <button className="text-lg sm:text-xl lg:text-[32px] hover:cursor-pointer font-medium" onClick={goToNext}>{t("Deal")}</button>
                                         </div>
                                         <div className="flex justify-center items-center w-full sm:w-[441px] h-12 sm:h-[52px] bg-[#F64848] rounded-2xl hover:cursor-pointer transition-colors hover:bg-[#d63a3a]" onClick={() => setPop(!pop)}>
-                                            <button className="text-lg sm:text-xl lg:text-[32px] hover:cursor-pointer font-medium" onClick={() =>setPop(!pop)}>Not Deal</button>
+                                            <button className="text-lg sm:text-xl lg:text-[32px] hover:cursor-pointer font-medium" onClick={() =>setPop(!pop)}>{t('Not Deal')}</button>
                                         </div>
                                     </>
                                 ) : ("")}
@@ -192,7 +206,7 @@ export default function TransactionDetail({ role, transactions = [] as TxnRow[] 
                     <div className="flex flex-col justify-start items-start p-4 sm:p-6 lg:p-10 w-full max-w-[838px] max-h-[90vh] overflow-y-auto bg-white border-3 rounded-3xl">
                         {serverRole == "Seller" ? (
                             <div className="flex flex-col justify-between gap-3 sm:gap-5 mt-8 sm:mt-20 w-full">
-                                <h1 className="text-xl sm:text-2xl lg:text-[32px] mb-3 sm:mb-5 font-bold">Reason Not Dealing</h1>
+                                <h1 className="text-xl sm:text-2xl lg:text-[32px] mb-3 sm:mb-5 font-bold">{t('Reason')}</h1>
                                 <div className="flex items-center gap-2 cursor-pointer">
                                     <div
                                         onClick={() => setSelected(!selected)}
@@ -200,7 +214,7 @@ export default function TransactionDetail({ role, transactions = [] as TxnRow[] 
                                         selected ? "bg-blue-600 border-black" : "bg-white border-black"
                                         }`}
                                     />
-                                    <span className="text-sm sm:text-lg lg:text-[28px] text-[#F64848]">Buyer didn't show up</span>
+                                    <span className="text-sm sm:text-lg lg:text-[28px] text-[#F64848]">{t('Buyershow')}</span>
                                 </div>
                                 <div className="flex items-center gap-2 cursor-pointer">
                                     <div
@@ -209,7 +223,7 @@ export default function TransactionDetail({ role, transactions = [] as TxnRow[] 
                                         selected2 ? "bg-blue-600 border-black" : "bg-white border-black"
                                         }`}
                                     />
-                                    <span className="text-sm sm:text-lg lg:text-[28px] text-[#F64848]">Buyer asked to lower the price too much</span>
+                                    <span className="text-sm sm:text-lg lg:text-[28px] text-[#F64848]">{t('Buyerprice')}</span>
                                 </div>
                                 <div className="flex items-center gap-2 cursor-pointer">
                                     <div
@@ -218,7 +232,7 @@ export default function TransactionDetail({ role, transactions = [] as TxnRow[] 
                                         selected3 ? "bg-blue-600 border-black" : "bg-white border-black"
                                         }`}
                                     />
-                                    <span className="text-sm sm:text-lg lg:text-[28px] text-[#F64848]">Buyer changed meeting time/place suddenly</span>
+                                    <span className="text-sm sm:text-lg lg:text-[28px] text-[#F64848]">{t('Buyerchanged')}</span>
                                 </div>
                                 <div className="flex items-center gap-2 cursor-pointer">
                                     <div
@@ -227,7 +241,7 @@ export default function TransactionDetail({ role, transactions = [] as TxnRow[] 
                                         selected4 ? "bg-blue-600 border-black" : "bg-white border-black"
                                         }`}
                                     />
-                                    <span className="text-sm sm:text-lg lg:text-[28px] text-[#F64848]">Safety concerns about the buyer</span>
+                                    <span className="text-sm sm:text-lg lg:text-[28px] text-[#F64848]">{t('Buyersafety')}</span>
                                 </div>
                                 <div className="flex items-center gap-2 cursor-pointer">
                                     <div
@@ -236,7 +250,7 @@ export default function TransactionDetail({ role, transactions = [] as TxnRow[] 
                                         selected5 ? "bg-blue-600 border-black" : "bg-white border-black"
                                         }`}
                                     />
-                                    <span className="text-sm sm:text-lg lg:text-[28px] text-[#F64848]">Buyer check too many but not serious</span>
+                                    <span className="text-sm sm:text-lg lg:text-[28px] text-[#F64848]">{t('Buyerserious')}</span>
                                 </div>
                                 <div className="flex items-center gap-2 cursor-pointer">
                                     <div
@@ -245,7 +259,7 @@ export default function TransactionDetail({ role, transactions = [] as TxnRow[] 
                                         selected6 ? "bg-blue-600 border-black" : "bg-white border-black"
                                         }`}
                                     />
-                                    <span className="text-sm sm:text-lg lg:text-[28px] text-[#F64848]">Buyer seemed suspicious</span>
+                                    <span className="text-sm sm:text-lg lg:text-[28px] text-[#F64848]">{t('Buyersuspicious')}</span>
                                 </div>
                                 <div className="flex items-center gap-2 cursor-pointer">
                                     <div
@@ -254,7 +268,7 @@ export default function TransactionDetail({ role, transactions = [] as TxnRow[] 
                                         selected7 ? "bg-blue-600 border-black" : "bg-white border-black"
                                         }`}
                                     />
-                                    <span className="text-sm sm:text-lg lg:text-[28px] text-[#F64848]">Buyer didn't follow the agreed COD location</span>
+                                    <span className="text-sm sm:text-lg lg:text-[28px] text-[#F64848]">{t('Buyerlocation')}</span>
                                 </div>
                                 <div className="flex items-center gap-2 cursor-pointer">
                                     <div
@@ -263,12 +277,12 @@ export default function TransactionDetail({ role, transactions = [] as TxnRow[] 
                                         selected8 ? "bg-blue-600 border-black" : "bg-white border-black"
                                         }`}
                                     />
-                                    <span className="text-sm sm:text-lg lg:text-[28px] text-[#F64848]">Buyer didn't agree with product condition</span>
+                                    <span className="text-sm sm:text-lg lg:text-[28px] text-[#F64848]">{t('Buyercondition')}</span>
                                 </div>
                             </div>
                         ):(
                             <div className="flex flex-col justify-between gap-3 sm:gap-5 mt-8 sm:mt-20 w-full">
-                                <h1 className="text-xl sm:text-2xl lg:text-[32px] mb-3 sm:mb-5 font-bold">Reason Not Dealing</h1>
+                                <h1 className="text-xl sm:text-2xl lg:text-[32px] mb-3 sm:mb-5 font-bold">{t('Reason')}</h1>
                                 <div className="flex items-center gap-2 cursor-pointer">
                                     <div
                                         onClick={() => setSelected(!selected)}
@@ -276,7 +290,7 @@ export default function TransactionDetail({ role, transactions = [] as TxnRow[] 
                                         selected ? "bg-blue-600 border-black" : "bg-white border-black"
                                         }`}
                                     />
-                                    <span className="text-sm sm:text-lg lg:text-[28px] text-[#F64848]">Found cheaper elsewhere</span>
+                                    <span className="text-sm sm:text-lg lg:text-[28px] text-[#F64848]">{t('Sellercheap')}</span>
                                 </div>
                                 <div className="flex items-center gap-2 cursor-pointer">
                                     <div
@@ -285,7 +299,7 @@ export default function TransactionDetail({ role, transactions = [] as TxnRow[] 
                                         selected2 ? "bg-blue-600 border-black" : "bg-white border-black"
                                         }`}
                                     />
-                                    <span className="text-sm sm:text-lg lg:text-[28px] text-[#F64848]">Fake Product</span>
+                                    <span className="text-sm sm:text-lg lg:text-[28px] text-[#F64848]">{t('Sellerfake')}</span>
                                 </div>
                                 <div className="flex items-center gap-2 cursor-pointer">
                                     <div
@@ -294,7 +308,7 @@ export default function TransactionDetail({ role, transactions = [] as TxnRow[] 
                                         selected3 ? "bg-blue-600 border-black" : "bg-white border-black"
                                         }`}
                                     />
-                                    <span className="text-sm sm:text-lg lg:text-[28px] text-[#F64848]">Item not as expected</span>
+                                    <span className="text-sm sm:text-lg lg:text-[28px] text-[#F64848]">{t('Sellerexpected')}</span>
                                 </div>
                                 <div className="flex items-center gap-2 cursor-pointer">
                                     <div
@@ -303,7 +317,7 @@ export default function TransactionDetail({ role, transactions = [] as TxnRow[] 
                                         selected4 ? "bg-blue-600 border-black" : "bg-white border-black"
                                         }`}
                                     />
-                                    <span className="text-sm sm:text-lg lg:text-[28px] text-[#F64848]">Item quality not good</span>
+                                    <span className="text-sm sm:text-lg lg:text-[28px] text-[#F64848]">{t('Sellerquality')}</span>
                                 </div>
                                 <div className="flex items-center gap-2 cursor-pointer">
                                     <div
@@ -312,7 +326,7 @@ export default function TransactionDetail({ role, transactions = [] as TxnRow[] 
                                         selected5 ? "bg-blue-600 border-black" : "bg-white border-black"
                                         }`}
                                     />
-                                    <span className="text-sm sm:text-lg lg:text-[28px] text-[#F64848]">Wrong size / type</span>
+                                    <span className="text-sm sm:text-lg lg:text-[28px] text-[#F64848]">{t('Sellertype')}</span>
                                 </div>
                                 <div className="flex items-center gap-2 cursor-pointer">
                                     <div
@@ -321,7 +335,7 @@ export default function TransactionDetail({ role, transactions = [] as TxnRow[] 
                                         selected6 ? "bg-blue-600 border-black" : "bg-white border-black"
                                         }`}
                                     />
-                                    <span className="text-sm sm:text-lg lg:text-[28px] text-[#F64848]">Safety concerns</span>
+                                    <span className="text-sm sm:text-lg lg:text-[28px] text-[#F64848]">{t('Sellersafety')}</span>
                                 </div>
                                 <div className="flex items-center gap-2 cursor-pointer">
                                     <div
@@ -330,7 +344,7 @@ export default function TransactionDetail({ role, transactions = [] as TxnRow[] 
                                         selected7 ? "bg-blue-600 border-black" : "bg-white border-black"
                                         }`}
                                     />
-                                    <span className="text-sm sm:text-lg lg:text-[28px] text-[#F64848]">Payment Issues</span>
+                                    <span className="text-sm sm:text-lg lg:text-[28px] text-[#F64848]">{t('Sellerpayment')}</span>
                                 </div>
                                 <div className="flex items-center gap-2 cursor-pointer">
                                     <div
@@ -339,7 +353,7 @@ export default function TransactionDetail({ role, transactions = [] as TxnRow[] 
                                         selected8 ? "bg-blue-600 border-black" : "bg-white border-black"
                                         }`}
                                     />
-                                    <span className="text-sm sm:text-lg lg:text-[28px] text-[#F64848]">Too expensive after seeing in person</span>
+                                    <span className="text-sm sm:text-lg lg:text-[28px] text-[#F64848]">{t('Sellerexpensive')}</span>
                                 </div>
                             </div>
                         )}

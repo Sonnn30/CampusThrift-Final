@@ -7,7 +7,9 @@ use App\Models\ProfileBuyer;
 use App\Models\ProfileSeller;
 use App\Models\Appointment;
 use App\Models\Report;
+use App\Models\TransactionDetail;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
 class ProfileController extends Controller
@@ -16,6 +18,7 @@ class ProfileController extends Controller
     public function show($role)
     {
         $userId = Auth::id();
+        $role = ucfirst(strtolower($role));
 
         if ($role === 'Buyer') {
             $profile = ProfileBuyer::where('user_id', $userId)->first();
@@ -39,34 +42,75 @@ class ProfileController extends Controller
      */
     private function getCompletedTransactions($userId, $role)
     {
-        $query = Appointment::with(['product', 'user'])
-            ->where('status', 'completed');
+        $isSeller = strtolower($role) === 'seller';
+        $completedStatuses = ['completed', 'confirmed'];
 
-        if ($role === 'Seller') {
-            // Seller: get appointments where their product was sold
-            $query->whereHas('product', function($q) use ($userId) {
+        // Prefer using transaction_details table if entries exist
+        $transactionQuery = TransactionDetail::with(['appointment.product.user', 'appointment.user'])
+            ->whereIn('status', $completedStatuses);
+
+        if ($isSeller) {
+            $transactionQuery->whereHas('appointment.product', function ($q) use ($userId) {
                 $q->where('user_id', $userId);
             });
         } else {
-            // Buyer: get appointments they made
-            $query->where('users_id', $userId);
+            $transactionQuery->where('buyer_id', $userId);
         }
 
-        return $query->orderByDesc('date')
+        $transactions = $transactionQuery->orderByDesc('updated_at')->get();
+
+        if ($transactions->isNotEmpty()) {
+            return $transactions->map(function ($txn) use ($isSeller) {
+                $appointment = $txn->appointment;
+                $product = $appointment?->product;
+                $buyerName = $txn->buyer ?? $appointment?->user?->name ?? 'Buyer';
+
+                $date = $appointment?->date
+                    ? $appointment->date->format('M d, Y')
+                    : ($txn->paid_at ? $txn->paid_at->format('M d, Y') : now()->format('M d, Y'));
+
+                return [
+                    'date' => $date,
+                    'buyer' => $isSeller ? $buyerName : 'You',
+                    'buyer_id' => $txn->buyer_id ?? $appointment?->users_id,
+                    'seller_id' => $product?->user_id,
+                    'method' => $txn->method ?? 'COD',
+                    'id' => $txn->external_id ?? ('APT-' . ($appointment?->id ?? '')),
+                    'amount' => 'Rp ' . number_format($txn->amount ?? ($product?->product_price ?? 0), 0, ',', '.'),
+                    'success' => in_array(strtolower($txn->status ?? ''), ['completed', 'confirmed']),
+                    'appointment_id' => $appointment?->id,
+                ];
+            })->values()->toArray();
+        }
+
+        // Fallback to appointments table if there are no transaction_details yet
+        $appointmentQuery = Appointment::with(['product', 'user'])
+            ->whereIn('status', $completedStatuses);
+
+        if ($isSeller) {
+            $appointmentQuery->whereHas('product', function ($q) use ($userId) {
+                $q->where('user_id', $userId);
+            });
+        } else {
+            $appointmentQuery->where('users_id', $userId);
+        }
+
+        return $appointmentQuery->orderByDesc('date')
             ->get()
-            ->map(function($appointment) use ($role) {
+            ->map(function ($appointment) use ($isSeller) {
+                $product = $appointment->product;
                 return [
                     'date' => $appointment->date->format('M d, Y'),
-                    'buyer' => $role === 'Seller' ? $appointment->user->name : 'You',
-                    'buyer_id' => $appointment->users_id, // ID buyer
-                    'seller_id' => $appointment->product->user_id, // ID seller
+                    'buyer' => $isSeller ? ($appointment->user->name ?? 'Buyer') : 'You',
+                    'buyer_id' => $appointment->users_id,
+                    'seller_id' => $product?->user_id,
                     'method' => 'COD',
-                    'id' => 'INV' . str_pad($appointment->id, 10, '0', STR_PAD_LEFT),
-                    'amount' => 'Rp ' . number_format($appointment->product->product_price, 0, ',', '.'),
+                    'id' => 'APT-' . $appointment->id,
+                    'amount' => 'Rp ' . number_format($product?->product_price ?? 0, 0, ',', '.'),
                     'success' => true,
                     'appointment_id' => $appointment->id,
                 ];
-            });
+            })->values()->toArray();
     }
 
     // Create or Update profile (CREATE/UPDATE)
@@ -123,7 +167,11 @@ public function storeOrUpdate(Request $request, $role)
     public function submitReport(Request $request, $role)
     {
         $validated = $request->validate([
-            'reported_id' => 'required|exists:users,id',
+            'reported_id' => [
+                'required',
+                'exists:users,id',
+                Rule::notIn([Auth::id()]),
+            ],
             'appointment_id' => 'nullable|exists:appointment,id',
             'reasons' => 'required|array|min:1',
             'reasons.*' => 'required|string',

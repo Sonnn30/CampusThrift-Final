@@ -1,12 +1,21 @@
-
+import useTranslation from '@/Hooks/useTranslation';
 
 export default function ConfirmPage({ role, detail }: any){
+    const getLocale = () => {
+        const path = window.location.pathname;
+        const match = path.match(/^\/([a-z]{2})\//);
+        return match ? match[1] : 'id';
+    };
+
     function goToReview(){
         // Use appointment_id from detail if available, otherwise go to UploadEvidence without parameter
         const appointmentId = detail?.appointment_id;
-        const url = appointmentId ? `/UploadEvidence?appointment_id=${appointmentId}` : `/UploadEvidence`;
+        const locale = getLocale();
+        const url = appointmentId ? `/${locale}/UploadEvidence?appointment_id=${appointmentId}` : `/${locale}/UploadEvidence`;
         window.location.href = url;
     }
+
+    const {t} = useTranslation()
     return(
         <>
             <div className="flex justify-center items-center bg-[#ECEEDF] w-full h-full p-10">
@@ -15,8 +24,8 @@ export default function ConfirmPage({ role, detail }: any){
                         <img src="/check2.png" alt="check" className="w-[158px] h-[158px]"/>
                     </div>
                     <div className="flex flex-col items-center gap-10">
-                        <h1 className="text-[48px] font-bold">Product Deal</h1>
-                        <p className="text-[42px]">Let's confirm the deal</p>
+                        <h1 className="text-[48px] font-bold">{t('Product Deal')}</h1>
+                        <p className="text-[42px]">{t("Let's")}</p>
                     </div>
                     <div className="flex items-center gap-10 bg-white w-[751px] h-[309px] p-5 border-2">
                         <div>
@@ -24,7 +33,7 @@ export default function ConfirmPage({ role, detail }: any){
                         </div>
                         <div className="flex flex-col gap-5 text-[32px]">
                             <h1>{detail?.item || 'Product'}</h1>
-                            <p>Date: {detail?.date}</p>
+                            <p>{t('Date')}: {detail?.date}</p>
                             <div className="flex justify-between gap-5">
                                 <p>ID: {detail?.id}</p>
                                 <p className="font-bold">Rp {Number(detail?.amount || 0).toLocaleString('id-ID')}</p>

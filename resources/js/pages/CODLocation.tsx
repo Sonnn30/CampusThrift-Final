@@ -11,6 +11,7 @@ import {
 import axios from "axios";
 import { router } from '@inertiajs/react';
 import CODLocationRoute from '@/routes/CODLocation';
+import useTranslation from "@/Hooks/useTranslation";
 
 interface Product {
     id: number;
@@ -28,8 +29,16 @@ interface CODLocationProps {
 }
 
 export default function CODLocation({ product, selectedDate, selectedTime, availableLocations }: CODLocationProps){
+    const getLocale = () => {
+        const path = window.location.pathname;
+        const match = path.match(/^\/([a-z]{2})\//);
+        return match ? match[1] : 'id';
+    };
+
     const goToNext = () => {
-        router.post(CODLocationRoute.store.url(), {
+        const locale = getLocale();
+
+        router.post(CODLocationRoute.store.url({ locale }), {
             location: selectedLocation.display_name,
             product_id: product.id,
             date: selectedDate,
@@ -43,7 +52,8 @@ export default function CODLocation({ product, selectedDate, selectedTime, avail
     }
 
     const goBack = () => {
-        router.get('/COD/time');
+        const locale = getLocale();
+        router.get(`/${locale}/COD/time`);
     }
     const [date, setDate] = useState<Date | null>(null);
     const [time, setTime] = useState({hour: "12", minute: "30"});
@@ -129,6 +139,8 @@ export default function CODLocation({ product, selectedDate, selectedTime, avail
     return null;
     }
 
+    const {t} = useTranslation()
+
 
     return(
         <>
@@ -136,7 +148,7 @@ export default function CODLocation({ product, selectedDate, selectedTime, avail
             {/* Header */}
             <div className="flex flex-col items-center mt-4 sm:mt-8 lg:mt-12 mb-6 sm:mb-8 lg:mb-10">
                 <h2 className="text-2xl sm:text-3xl lg:text-[40px] font-semibold text-gray-700">COD</h2>
-                <h1 className="text-3xl sm:text-4xl lg:text-[54px] font-bold text-center">Select your locations</h1>
+                <h1 className="text-3xl sm:text-4xl lg:text-[54px] font-bold text-center">{t('Selectlo')}</h1>
             </div>
 
             {/* Main Container */}
@@ -155,7 +167,7 @@ export default function CODLocation({ product, selectedDate, selectedTime, avail
 
                         {/* Title */}
                         <div>
-                            <h1 className="text-2xl sm:text-3xl lg:text-[40px] font-bold text-gray-800">Select Location Page</h1>
+                            <h1 className="text-2xl sm:text-3xl lg:text-[40px] font-bold text-gray-800">{t('Selectlocation')}</h1>
                         </div>
 
                         {/* Selected Date Display */}
@@ -166,7 +178,7 @@ export default function CODLocation({ product, selectedDate, selectedTime, avail
                                 className="w-8 h-8 sm:w-10 sm:h-10 flex-shrink-0"
                             />
                             <p className="text-lg sm:text-xl lg:text-[24px] font-medium">
-                                {date ? format(date, "dd/MM/yyyy") : "No date selected"}
+                                {date ? format(date, "dd/MM/yyyy") : t("No Date")}
                             </p>
                         </div>
 
@@ -200,7 +212,7 @@ export default function CODLocation({ product, selectedDate, selectedTime, avail
                         className="w-full mt-6 lg:mt-8 rounded-xl h-[56px] sm:h-[60px] lg:h-[68px] bg-[#BBDCE5] text-xl sm:text-2xl lg:text-[32px] font-semibold hover:bg-[#a8cbd6] hover:shadow-lg active:scale-[0.98] transition-all duration-200 cursor-pointer"
                         onClick={goToNext}
                     >
-                        Make Appointment
+                        {t('Make Appointment')}
                     </button>
                 </div>
 
@@ -209,7 +221,7 @@ export default function CODLocation({ product, selectedDate, selectedTime, avail
                     <div className="w-full h-full flex flex-col">
                         {/* Header with Back Button */}
                         <div className="flex justify-between items-center mb-4 sm:mb-6">
-                            <h1 className="text-xl sm:text-2xl lg:text-[32px] font-bold">Select a Location</h1>
+                            <h1 className="text-xl sm:text-2xl lg:text-[32px] font-bold">{t('Selectalocation')}</h1>
                             <button
                                 onClick={goBack}
                                 className="p-2 hover:bg-gray-100 rounded-full transition-colors"
@@ -227,12 +239,12 @@ export default function CODLocation({ product, selectedDate, selectedTime, avail
                         <div className="flex flex-col justify-center items-start p-4 sm:p-5 lg:p-6 text-base sm:text-lg lg:text-[24px] font-semibold mb-4 sm:mb-6 bg-[#BBDCE5] rounded-xl">
                             <div className="flex items-center gap-2 mb-2">
                                 <img src="/lock.png" alt="lock" className="w-5 h-5 sm:w-6 sm:h-6 lg:w-[25px] lg:h-[25px]"/>
-                                <p className="text-sm sm:text-base lg:text-[24px]">Safe COD Location Recommendations:</p>
+                                <p className="text-sm sm:text-base lg:text-[24px]">{t('Safe COD')}:</p>
                             </div>
                             <div className="text-sm sm:text-base lg:text-[20px] space-y-1">
-                                <p>- Campus Kemanggisan</p>
-                                <p>- Campus Syahdan</p>
-                                <p>- Binus Square Food Court</p>
+                                <p>- {t('Kemanggisan Campus')}</p>
+                                <p>- {t('Syahdan Campus')}</p>
+                                <p>- {t('Binus Square')}</p>
                             </div>
                         </div>
 
@@ -242,7 +254,7 @@ export default function CODLocation({ product, selectedDate, selectedTime, avail
                                 type="text"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                placeholder="Cari alamat..."
+                                placeholder= {t('Addres')}
                                 className="w-full p-3 sm:p-4 border-2 border-gray-300 rounded-lg text-base sm:text-lg focus:outline-none focus:ring-2 focus:ring-[#BBDCE5] focus:border-transparent"
                             />
                             {suggestions.length > 0 && (
@@ -288,8 +300,8 @@ export default function CODLocation({ product, selectedDate, selectedTime, avail
 
             {/* Helper Text (Mobile) */}
             <div className="lg:hidden mt-4 text-center text-sm text-gray-600 space-y-1">
-                <p>📍 Search or select a safe location</p>
-                <p>Use the map to pinpoint exact location</p>
+                <p>📍 {t('Searchh')}</p>
+                <p>{t('Use')}</p>
             </div>
         </div>
         </>

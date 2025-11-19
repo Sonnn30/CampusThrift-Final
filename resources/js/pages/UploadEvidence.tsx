@@ -1,5 +1,7 @@
 import { useRef, useState } from "react";
 import { router, usePage } from '@inertiajs/react';
+import useTranslation from "@/Hooks/useTranslation";
+import { usePickerData } from "node_modules/react-mobile-picker/dist/components/Picker";
 
 export default function UploadEvidence({role}: {role?: string}){
     const page = usePage<any>();
@@ -42,7 +44,14 @@ export default function UploadEvidence({role}: {role?: string}){
         formData.append('appointment_id', appointmentId);
         formData.append('description', description);
 
-        router.post('/UploadEvidence', formData, {
+        const getLocale = () => {
+            const path = window.location.pathname;
+            const match = path.match(/^\/([a-z]{2})\//);
+            return match ? match[1] : 'id';
+        };
+
+        const locale = getLocale();
+        router.post(`/${locale}/UploadEvidence`, formData, {
             forceFormData: true,
             onSuccess: () => {
                 alert('Evidence uploaded successfully!');
@@ -70,21 +79,23 @@ export default function UploadEvidence({role}: {role?: string}){
     function goToHome(){
         router.visit('/');
     }
+
+    const {t} = useTranslation()
     return(
         <>
             <div className="flex flex-col justify-center items-center w-full h-[1000px] bg-[#ECEEDF] gap-15">
                 <div className="text-[54px] font-bold flex justify-center items-center">
-                    <h1>Upload Proof of Handover</h1>
+                    <h1>{t('Upload')}</h1>
                 </div>
                 <div className="flex flex-col items-center justify-center w-[1309px] h-[407px] bg-white border-2 border-dashed rounded-2xl gap-3">
                     <img src="/upload.png" alt="upload" className="w-[123px] h-[123px]"/>
-                    <p className="font-bold text-[32px]">Drag or drop your document here </p>
+                    <p className="font-bold text-[32px]">{t('Drag')}</p>
                     <div className="flex flex-col items-center gap-3">
                         <button
                             onClick={handleClick}
                             className="text-[32px] text-[#1C6EA4] font-bold border-2 border-[#1C6EA4] px-6 py-2 rounded-xl hover:bg-[#1C6EA4] hover:text-white transition-all"
                         >
-                            Choose a file
+                            {t('Choosefile')}
                         </button>
 
                         <input
@@ -101,10 +112,10 @@ export default function UploadEvidence({role}: {role?: string}){
 
                 {/* Description Input */}
                 <div className="flex flex-col items-center justify-center w-[1309px] gap-3">
-                    <label className="text-[24px] font-bold">Description (Optional)</label>
+                    <label className="text-[24px] font-bold">{t('Desc')} (Optional)</label>
                     <textarea
                         className="w-full h-32 border-2 rounded-lg p-3 text-[18px]"
-                        placeholder="Add a description for your evidence..."
+                        placeholder={t("Adddesc")}
                         value={description}
                         onChange={(e) => setDescription(e.target.value)}
                     />

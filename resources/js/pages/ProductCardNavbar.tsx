@@ -1,4 +1,5 @@
 import { useState } from "react";
+import useTranslation from "@/Hooks/useTranslation";
 
 type Props = {
   onFilterChange?: (filter: string) => void;
@@ -13,6 +14,7 @@ export default function ProductCardNavbar({ onFilterChange, category, categoryCo
   const [showFilters, setShowFilters] = useState(false);
 
   const tabs = ["View All", "Best Seller", "Low Price", "High Price"];
+  const fallbackCategories = ['All', 'Chair', 'Table', 'Shoes', 'Book', 'Electronic', 'Bookshelf', 'Fan', 'Desk Lamp', 'Stationery', 'Tableware', 'Backpack', 'Jacket'];
 
   function selectTab(tab: string) {
     setActive(tab);
@@ -28,6 +30,8 @@ export default function ProductCardNavbar({ onFilterChange, category, categoryCo
     setShowFilters(false);
   }
 
+  const { t } = useTranslation();
+
   return (
     <div className="w-full">
       {/* Desktop View - Horizontal Tabs */}
@@ -42,7 +46,7 @@ export default function ProductCardNavbar({ onFilterChange, category, categoryCo
                 : "text-[#AFAFAF] hover:text-black hover:underline hover:decoration-blue-500 hover:underline-offset-4 hover:scale-102"
             }`}
           >
-            {tab}
+            {t(tab)}
           </button>
         ))}
 
@@ -53,7 +57,7 @@ export default function ProductCardNavbar({ onFilterChange, category, categoryCo
               onClick={() => onCategoryChange('all')}
               className={`px-3 py-1 rounded-full border text-sm font-medium transition-colors ${category === null ? 'bg-[#4b9cd3] text-white' : 'bg-white hover:bg-gray-100'}`}
             >
-              All ({Array.from(categoryCounts.values()).reduce((a,b)=>a+b,0)})
+              {t('All')} ({Array.from(categoryCounts.values()).reduce((a,b)=>a+b,0)})
             </button>
             {Array.from(categoryCounts.entries()).map(([k, cnt]) => (
               <button
@@ -64,6 +68,27 @@ export default function ProductCardNavbar({ onFilterChange, category, categoryCo
                 {k === 'uncategorized' ? 'Uncategorized' : k} ({cnt})
               </button>
             ))}
+          </div>
+        )}
+        {!categoryCounts && typeof onCategoryChange === 'function' && (
+          <div className="ml-6 flex gap-3 items-center flex-wrap">
+            {fallbackCategories.map((cat) => {
+              const normalized = cat === 'All' ? null : cat.toLowerCase();
+              const isActive = normalized === null ? category === null : category === normalized;
+              return (
+              <button
+                key={cat}
+                onClick={() => onCategoryChange(cat === 'All' ? null : cat)}
+                className={`px-3 py-1 rounded-full border text-sm font-medium transition-colors ${
+                  isActive
+                    ? 'bg-[#4b9cd3] text-white'
+                    : 'bg-white hover:bg-gray-100'
+                }`}
+              >
+                {t(cat)}
+              </button>
+              );
+            })}
           </div>
         )}
       </div>
@@ -79,7 +104,7 @@ export default function ProductCardNavbar({ onFilterChange, category, categoryCo
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
             </svg>
-            <span>Filter: {active}</span>
+            <span>Filter: {t(active)}</span>
           </div>
           <svg
             className={`w-5 h-5 transform transition-transform ${showFilters ? 'rotate-180' : ''}`}
@@ -96,7 +121,7 @@ export default function ProductCardNavbar({ onFilterChange, category, categoryCo
           <div className="mt-2 bg-white border-2 border-gray-200 rounded-lg shadow-lg overflow-hidden">
             {/* Filter Tabs */}
             <div className="border-b-2 border-gray-200">
-              <p className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase">Sort By</p>
+              <p className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase">{t('Sort By')}</p>
               {tabs.map((tab) => (
                 <button
                   key={tab}
@@ -107,7 +132,7 @@ export default function ProductCardNavbar({ onFilterChange, category, categoryCo
                       : "text-gray-700 hover:bg-gray-100"
                   }`}
                 >
-                  {tab}
+                  {t(tab)}
                   {active === tab && (
                     <span className="float-right">✓</span>
                   )}
@@ -127,7 +152,7 @@ export default function ProductCardNavbar({ onFilterChange, category, categoryCo
                       : "text-gray-700 hover:bg-gray-100"
                   }`}
                 >
-                  All ({Array.from(categoryCounts.values()).reduce((a,b)=>a+b,0)})
+                  {t('All')}({Array.from(categoryCounts.values()).reduce((a,b)=>a+b,0)})
                   {category === null && (
                     <span className="float-right">✓</span>
                   )}
@@ -150,6 +175,31 @@ export default function ProductCardNavbar({ onFilterChange, category, categoryCo
                 ))}
               </div>
             )}
+            {!categoryCounts && typeof onCategoryChange === 'function' && (
+              <div>
+                <p className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase">Categories</p>
+                {fallbackCategories.map((cat) => {
+                  const normalized = cat === 'All' ? null : cat.toLowerCase();
+                  const isActive = normalized === null ? category === null : category === normalized;
+                  return (
+                  <button
+                    key={cat}
+                    onClick={() => { onCategoryChange(cat === 'All' ? null : cat); setShowFilters(false); }}
+                    className={`w-full text-left px-4 py-3 font-medium transition-colors ${
+                      isActive
+                        ? "bg-[#4b9cd3] text-white"
+                        : "text-gray-700 hover:bg-gray-100"
+                    }`}
+                  >
+                    {t(cat)}
+                    {isActive && (
+                      <span className="float-right">✓</span>
+                    )}
+                  </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -160,12 +210,12 @@ export default function ProductCardNavbar({ onFilterChange, category, categoryCo
           <div className="flex flex-wrap gap-2">
             {active !== "View All" && (
               <span className="inline-flex items-center gap-1 bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-1 rounded-full">
-                Sort: {active}
+                Sort: {t(active)}
               </span>
             )}
             {category !== null && (
               <span className="inline-flex items-center gap-1 bg-green-100 text-green-800 text-xs font-medium px-2.5 py-1 rounded-full">
-                Category: {category === 'uncategorized' ? 'Uncategorized' : category}
+                {t('Category')}: {category === 'uncategorized' ? 'Uncategorized' : category}
               </span>
             )}
           </div>

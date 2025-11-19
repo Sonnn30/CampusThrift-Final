@@ -1,5 +1,6 @@
 import { usePage } from "@inertiajs/react";
 import { router } from "@inertiajs/react";
+import useTranslation from "@/Hooks/useTranslation";
 
 interface Conversation {
     id: number;
@@ -26,17 +27,25 @@ interface ChatListProps {
 export default function ChatList() {
     const { role, conversations } = usePage<ChatListProps>().props;
 
-    const openChat = (userId: number) => {
-        const routeName = role === "Buyer" ? "BuyerChat" : "SellerChat";
-        window.location.href = `/${role}/chat/${userId}`;
+    const getLocale = () => {
+        const path = window.location.pathname;
+        const match = path.match(/^\/([a-z]{2})\//);
+        return match ? match[1] : 'id';
     };
+
+    const openChat = (userId: number) => {
+        const locale = getLocale();
+        window.location.href = `/${locale}/${role}/chat/${userId}`;
+    };
+
+    const {t} = useTranslation()
 
     return (
         <div className="w-full min-h-screen bg-[#ECEEDF] py-10 px-6">
             {/* Header */}
             <div className="max-w-5xl mx-auto mb-8">
-                <h1 className="text-4xl font-bold text-gray-800 mb-2">Messages</h1>
-                <p className="text-gray-600">Your conversations</p>
+                <h1 className="text-4xl font-bold text-gray-800 mb-2">{t('Messages')}</h1>
+                <p className="text-gray-600">{t('Your')}</p>
             </div>
 
             {/* Chat List */}
@@ -71,12 +80,12 @@ export default function ChatList() {
                                         </h3>
                                         {conv.last_message && (
                                             <span className="text-sm text-gray-500 ml-2 flex-shrink-0">
-                                                {conv.last_message.time}
+                                                {t(conv.last_message.time)}
                                             </span>
                                         )}
                                     </div>
                                     <p className={`text-sm truncate ${conv.unread_count > 0 ? 'text-gray-800 font-medium' : 'text-gray-500'}`}>
-                                        {conv.last_message?.text || "No messages yet"}
+                                        {conv.last_message?.text || t("NoMessages")}
                                     </p>
                                 </div>
 
@@ -117,7 +126,7 @@ export default function ChatList() {
                             </svg>
                             <div>
                                 <h3 className="text-xl font-semibold text-gray-700 mb-2">
-                                    No conversations yet
+                                    {t('NoMessages')}
                                 </h3>
                                 <p className="text-gray-500">
                                     Start chatting with {role === "Buyer" ? "sellers" : "buyers"} from products or transactions

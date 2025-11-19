@@ -1,4 +1,5 @@
 import { Link } from "@inertiajs/react";
+import useTranslation from "@/Hooks/useTranslation";
 
 type Seller = {
     id?: number;
@@ -10,24 +11,34 @@ type Seller = {
 }
 
 export default function SellerProductPageNavbar({ role, seller }: { role: string; seller?: Seller }) {
+        const getLocale = () => {
+            const path = window.location.pathname;
+            const match = path.match(/^\/([a-z]{2})\//);
+            return match ? match[1] : 'id';
+        };
+
         function goToProfile(){
             // if seller has id, go to their profile, otherwise fallback to role
-            const target = seller?.id ? `/Profile/${seller.id}` : `/Profile/${role}`;
+            const locale = getLocale();
+            const target = seller?.id ? `/${locale}/Profile/${seller.id}` : `/${locale}/Profile/${role}`;
             window.location.href = target;
         }
         function goToChat(){
             // Chat dengan seller ini jika ada ID, atau tidak tampil jika sedang lihat produk sendiri
+            const locale = getLocale();
             if (seller?.id) {
-                window.location.href = `/${role}/chat/${seller.id}`;
+                window.location.href = `/${locale}/${role}/chat/${seller.id}`;
             } else {
                 alert("Seller information not available");
             }
         }
         function goToAdd(){
-            window.location.href = `/${role}/product/add`;
+            const locale = getLocale();
+            window.location.href = `/${locale}/${role}/product/add`;
         }
         function goToChatList(){
-            window.location.href = `/${role}/chatlist`;
+            const locale = getLocale();
+            window.location.href = `/${locale}/${role}/chatlist`;
         }
 
         const displayName = seller?.name ?? 'Nama Seller';
@@ -35,6 +46,8 @@ export default function SellerProductPageNavbar({ role, seller }: { role: string
         const rating = seller?.rating ?? 0;
         const joinedAt = seller?.joinedAt ?? '';
         const status = seller?.status ?? 'Offline';
+
+        const { t } = useTranslation();
 
     return (
         <div className="bg-[#BBDCE5] text-black">
@@ -68,7 +81,7 @@ export default function SellerProductPageNavbar({ role, seller }: { role: string
                                 className="flex-1 sm:flex-initial bg-white rounded-md px-4 py-2 text-sm sm:text-base flex justify-center items-center hover:bg-gray-100 transition-colors duration-200 border border-gray-300 shadow-sm font-medium"
                                 onClick={goToProfile}
                             >
-                                View Profile
+                                {t("View Profile")}
                             </button>
 
                             {role === "Buyer" ? (
@@ -93,7 +106,7 @@ export default function SellerProductPageNavbar({ role, seller }: { role: string
                                         src="/SellerPage_assets/chat.png"
                                         alt="Chat Icon"
                                     />
-                                    Chat List
+                                    {t("Chat List")}
                                 </button>
                             )}
                         </div>
@@ -111,7 +124,7 @@ export default function SellerProductPageNavbar({ role, seller }: { role: string
                                         alt="Store Icon"
                                     />
                                 </div>
-                                <span className="ml-2 sm:ml-3 truncate">Items: {itemsCount}</span>
+                                <span className="ml-2 sm:ml-3 truncate">{t('Items')}: {itemsCount}</span>
                             </div>
 
                             {/* Rating */}
@@ -123,7 +136,7 @@ export default function SellerProductPageNavbar({ role, seller }: { role: string
                                         alt="Rating Icon"
                                     />
                                 </div>
-                                <span className="ml-2 sm:ml-3 truncate">Rating: {rating}</span>
+                                <span className="ml-2 sm:ml-3 truncate">{t('Rating')}: {rating}</span>
                             </div>
 
                             {/* Status */}
@@ -149,7 +162,7 @@ export default function SellerProductPageNavbar({ role, seller }: { role: string
                                         alt="Group Icon"
                                     />
                                 </div>
-                                <span className="ml-2 sm:ml-3 truncate">Since: {joinedAt}</span>
+                                <span className="ml-2 sm:ml-3 truncate">{t('Since')}: {joinedAt}</span>
                             </div>
                         </div>
                     </div>
@@ -166,7 +179,7 @@ export default function SellerProductPageNavbar({ role, seller }: { role: string
                                     src="/SellerPage_assets/add.png"
                                     alt="Add Icon"
                                 />
-                                Add Product
+                                {t("Add Product")}
                             </button>
                         </div>
                     )}

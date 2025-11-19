@@ -23,7 +23,8 @@ class AuthManager extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect('/');
+        $locale = $request->route('locale') ?? 'id';
+        return redirect()->route('home', ['locale' => $locale]);
     }
 
 public function UserDashboard()
@@ -65,8 +66,9 @@ public function UserDashboard()
         ]);
 
         $user = User::where('email', $request->email)->first();
+        $locale = $request->route('locale') ?? 'id';
         if(!$user){
-            return redirect()->route('SignUp')->with('error', 'Your Account Have not Registered yet, Please Sign Up');
+            return redirect()->route('SignUp', ['locale' => $locale])->with('error', 'Your Account Have not Registered yet, Please Sign Up');
         }
         $credentials = $request->only('email', 'password');
         if(Auth::attempt($credentials)){
@@ -75,11 +77,11 @@ public function UserDashboard()
 
             // redirect sesuai role
             if($request->role === 'Buyer'){
-                return redirect()->route('BuyerHome');
+                return redirect()->route('BuyerHome', ['locale' => $locale]);
             } elseif($request->role === 'Seller'){
-                return redirect()->route('SellerHome');
+                return redirect()->route('SellerHome', ['locale' => $locale]);
             } else {
-                return redirect()->intended('/');
+                return redirect()->route('home', ['locale' => $locale]);
             }
         }
         return back()->withErrors([
@@ -105,10 +107,11 @@ public function UserDashboard()
         Auth::login($user);
         $request->session()->put('role', $user->role);
 
+        $locale = $request->route('locale') ?? 'id';
         if ($user->role === "Buyer") {
-            return Inertia::location('/Buyer');
+            return redirect()->route('BuyerHome', ['locale' => $locale]);
         } else {
-            return Inertia::location('/Seller');
+            return redirect()->route('SellerHome', ['locale' => $locale]);
         }
     }
 }

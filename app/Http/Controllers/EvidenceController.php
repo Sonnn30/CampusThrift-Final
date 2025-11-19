@@ -74,13 +74,19 @@ class EvidenceController extends Controller
         }
 
         try {
+            $disk = config('filesystems.default', 'public');
+            // Fallback to local disk if S3 driver/package is not available
+            if ($disk === 's3' && !class_exists(\League\Flysystem\AwsS3V3\PortableVisibilityConverter::class)) {
+                $disk = 'public';
+            }
+
             $file = $request->file('evidence_file');
 
             // Generate unique filename with ID
             $fileName = time() . '_' . $appointment->id . '_' . $user->id . '.' . $file->getClientOriginalExtension();
 
             // Store file to S3 under folder "evidence"
-            $filePath = $file->storeAs('evidence', $fileName, 's3');
+            $filePath = $file->storeAs('evidence', $fileName, $disk);
 
             // Create evidence record
             $evidence = Evidence::create([
@@ -146,9 +152,14 @@ class EvidenceController extends Controller
         }
 
         try {
-            // Delete file from S3 storage
-            if (Storage::disk('s3')->exists($evidence->file_path)) {
-                Storage::disk('s3')->delete($evidence->file_path);
+            $disk = config('filesystems.default', 'public');
+            if ($disk === 's3' && !class_exists(\League\Flysystem\AwsS3V3\PortableVisibilityConverter::class)) {
+                $disk = 'public';
+            }
+
+            // Delete file from storage
+            if (Storage::disk($disk)->exists($evidence->file_path)) {
+                Storage::disk($disk)->delete($evidence->file_path);
             }
 
             // Delete record

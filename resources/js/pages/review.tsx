@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { router, usePage } from '@inertiajs/react'
+import useTranslation from '@/Hooks/useTranslation';
 
 export default function Review({ role, appointment_id }: any){
     const page = usePage<any>();
@@ -21,7 +22,13 @@ export default function Review({ role, appointment_id }: any){
             alert('No appointment found for review. Please complete a transaction first or contact support.');
             return;
         }
-        const reviewRoute = serverRole === 'Seller' ? '/Seller/review' : '/Buyer/review';
+        const getLocale = () => {
+            const path = typeof window !== 'undefined' ? window.location.pathname : '';
+            const match = path.match(/^\/([a-z]{2})\//);
+            return match ? match[1] : 'id';
+        };
+        const locale = getLocale();
+        const reviewRoute = serverRole === 'Seller' ? `/${locale}/Seller/review` : `/${locale}/Buyer/review`;
         router.post(reviewRoute, {
             appointment_id: appointmentId,
             rating,
@@ -34,6 +41,8 @@ export default function Review({ role, appointment_id }: any){
         });
     }
 
+    const {t} = useTranslation()
+
     return(
         <>
             <div className="w-full h-screen flex justify-center items-center bg-[#ECEEDF]">
@@ -44,9 +53,9 @@ export default function Review({ role, appointment_id }: any){
                     </div>
                     <div className="flex flex-col gap-3">
                         <h1 className="text-[26px]">{serverRole === "Buyer" ? (
-                            "How would you rate your overall experience buying from this seller?"
+                            t("HowB")
                         ): (
-                            "How would you rate your overall experience with this buyer?"
+                            t("HowS")
                         )}</h1>
                         <div className="flex gap-2 text-4xl">
                             {[1,2,3,4,5].map((star) => (
@@ -65,9 +74,9 @@ export default function Review({ role, appointment_id }: any){
                     </div>
                     <div className="flex flex-col gap-3">
                         <h1 className="text-[26px]">{serverRole === "Buyer" ? (
-                            "What do you think about the product you purchased?"
+                            t("thinkB")
                         ): (
-                            "What was your experience dealing with this buyer?"
+                            t("thinkS")
                         )}</h1>
                         <div>
                             <textarea

@@ -2,6 +2,7 @@ import { useRef, useState, useEffect } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import { Inertia } from "@inertiajs/inertia";
 import { usePage } from '@inertiajs/react';
+import useTranslation from "@/Hooks/useTranslation";
 
 interface SellerProductAddProps {
     role: string;
@@ -117,6 +118,13 @@ export default function SellerProductAdd({ role }: SellerProductAddProps) {
         return null;
     }
 
+    // ================= HELPER =================
+    const getLocale = () => {
+        const path = typeof window !== 'undefined' ? window.location.pathname : '';
+        const match = path.match(/^\/([a-z]{2})\//);
+        return match ? match[1] : 'id';
+    };
+
     // ================= SUBMIT =================
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -166,7 +174,8 @@ export default function SellerProductAdd({ role }: SellerProductAddProps) {
             formData.append("images[]", file);
         });
 
-        Inertia.post('/Seller/product/add', formData, {
+        const locale = getLocale();
+        Inertia.post(`/${locale}/Seller/product/add`, formData, {
             forceFormData: true,
             onSuccess: () => {
                 setProduct({
@@ -180,7 +189,7 @@ export default function SellerProductAdd({ role }: SellerProductAddProps) {
                 setSelectedFile([]);
                 setFileError("");
                 // Navigate to product list after successful creation
-                Inertia.visit('/Seller/product');
+                Inertia.visit(`/${locale}/Seller/product`);
             },
             onError: (errors) => {
                 console.error('Form submission errors:', errors);
@@ -198,19 +207,20 @@ export default function SellerProductAdd({ role }: SellerProductAddProps) {
         });
     };
 
-    // ================= JSX =================
+    const {t} = useTranslation()
+
     return (
         <form onSubmit={handleSubmit} className="flex flex-col lg:flex-row lg:divide-x-4 divide-[#BBDCE5] w-full min-h-screen bg-[#ECEEDF]">
             {/* ===== LEFT PANEL: IMAGE UPLOAD ===== */}
             <div className="w-full lg:flex-1 flex flex-col items-center gap-4 sm:gap-5 py-6 px-4 sm:px-6">
                 <div className="flex flex-col items-baseline w-full">
-                    <h1 className="text-2xl sm:text-3xl lg:text-[32px] font-bold">Add new Product</h1>
-                    <p className="text-xs sm:text-sm">All fields with <span className="text-red-500">*</span> are required</p>
+                    <h1 className="text-2xl sm:text-3xl lg:text-[32px] font-bold">{t('Add new Product')}</h1>
+                    <p className="text-xs sm:text-sm">{t('All fields')} <span className="text-red-500">*</span> {t('are required')}</p>
                 </div>
 
                 <div className="flex flex-col justify-center items-center border-2 sm:border-3 border-[#2A6C86] w-full max-w-[320px] sm:max-w-[289px] h-[180px] sm:h-[195px] gap-3 rounded-lg shadow-md bg-white">
                     <img src="/photo.png" alt="photo" className="w-8 h-8 sm:w-[39px] sm:h-[39px]"/>
-                    <p className="text-[#2A6C86] text-base sm:text-lg lg:text-[20px] font-medium text-center px-2">Product Image (max 5)</p>
+                    <p className="text-[#2A6C86] text-base sm:text-lg lg:text-[20px] font-medium text-center px-2">{t('Product Image')} ({t('max')} 5)</p>
                     <input
                         type="file"
                         accept="image/*"
@@ -250,7 +260,7 @@ export default function SellerProductAdd({ role }: SellerProductAddProps) {
             <div className="w-full lg:flex-[2] flex flex-col justify-start items-start py-6 px-4 sm:px-6 lg:px-10 gap-6 sm:gap-8 lg:gap-10">
                 {/* Product Name */}
                 <div className="flex flex-col gap-2 sm:gap-3 w-full">
-                    <h1 className="text-xl sm:text-2xl lg:text-[32px] font-bold">Product Name <span className="text-red-500">*</span></h1>
+                    <h1 className="text-xl sm:text-2xl lg:text-[32px] font-bold">{t('Product Name')} <span className="text-red-500">*</span></h1>
                     <input
                         type="text"
                         className="border-2 w-full h-12 sm:h-14 lg:h-[50px] text-lg sm:text-xl lg:text-[32px] px-3 rounded focus:outline-none focus:ring-2 focus:ring-[#2A6C86]"
@@ -263,7 +273,7 @@ export default function SellerProductAdd({ role }: SellerProductAddProps) {
 
                 {/* Description */}
                 <div className="flex flex-col gap-2 sm:gap-3 w-full">
-                    <h1 className="text-xl sm:text-2xl lg:text-[32px] font-bold">Description <span className="text-red-500">*</span></h1>
+                    <h1 className="text-xl sm:text-2xl lg:text-[32px] font-bold">{t('Description')} <span className="text-red-500">*</span></h1>
                     <textarea
                         className="border-2 w-full min-h-[100px] sm:min-h-[120px] lg:min-h-[150px] text-lg sm:text-xl lg:text-[28px] px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-[#2A6C86] resize-y"
                         name="description"
@@ -275,7 +285,7 @@ export default function SellerProductAdd({ role }: SellerProductAddProps) {
                 {/* Price + Category */}
                 <div className="flex flex-col sm:flex-row justify-between gap-4 sm:gap-6 lg:gap-24 w-full">
                     <div className="flex flex-col gap-2 sm:gap-3 w-full sm:flex-1">
-                        <h1 className="text-xl sm:text-2xl lg:text-[32px] font-bold">Product Price <span className="text-red-500">*</span></h1>
+                        <h1 className="text-xl sm:text-2xl lg:text-[32px] font-bold">{t('Product price')} <span className="text-red-500">*</span></h1>
                         <input
                             type="text"
                             className="border-2 w-full h-12 sm:h-14 lg:h-[50px] text-lg sm:text-xl lg:text-[32px] px-3 rounded focus:outline-none focus:ring-2 focus:ring-[#2A6C86]"
@@ -287,31 +297,31 @@ export default function SellerProductAdd({ role }: SellerProductAddProps) {
                         {errors.product_price && <div className="text-red-500 text-xs sm:text-sm mt-1">{errors.product_price}</div>}
                     </div>
                     <div className="flex flex-col gap-2 sm:gap-3 w-full sm:flex-1">
-                        <h1 className="text-xl sm:text-2xl lg:text-[32px] font-bold">Product Category <span className="text-red-500">*</span></h1>
+                        <h1 className="text-xl sm:text-2xl lg:text-[32px] font-bold">{t('Product Category')} <span className="text-red-500">*</span></h1>
                         <select
                             name="category"
                             className="border-2 w-full h-12 sm:h-14 lg:h-[50px] text-lg sm:text-xl lg:text-[28px] px-3 rounded focus:outline-none focus:ring-2 focus:ring-[#2A6C86] bg-white"
                             value={product.category}
                             onChange={handleChange}
                         >
-                            <option value="Chair">Chair</option>
-                            <option value="Table">Table</option>
-                            <option value="Shoes">Shoes</option>
-                            <option value="Book">Book</option>
-                            <option value="Electronic">Electronic</option>
-                            <option value="Bookshelf">Bookshelf</option>
-                            <option value="fan">Fan</option>
-                            <option value="Stationery">Stationery</option>
-                            <option value="Tableware">Tableware</option>
-                            <option value="Backpack">Backpack</option>
-                            <option value="Jacket">Jacket</option>
+                            <option value="Chair">{t('Chair')}</option>
+                            <option value="Table">{t('Table')}</option>
+                            <option value="Shoes">{t('Shoes')}</option>
+                            <option value="Book">{t('Book')}</option>
+                            <option value="Electronic">{t('Electronic')}</option>
+                            <option value="Bookshelf">{t('Bookshelf')}</option>
+                            <option value="fan">{t('Fan')}</option>
+                            <option value="Stationery">{t('Stationery')}</option>
+                            <option value="Tableware">{t('Tableware')}</option>
+                            <option value="Backpack">{t('Backpack')}</option>
+                            <option value="Jacket">{t('Jacket')}</option>
                         </select>
                     </div>
                 </div>
 
                 {/* Shipping Method */}
                 <div className="flex flex-col gap-2 sm:gap-3 w-full">
-                    <h1 className="text-xl sm:text-2xl lg:text-[32px] font-bold">COD Method <span className="text-red-500">*</span></h1>
+                    <h1 className="text-xl sm:text-2xl lg:text-[32px] font-bold">{t('COD Method')} <span className="text-red-500">*</span></h1>
                     <div className="flex flex-col sm:flex-row justify-start sm:justify-between gap-4 sm:gap-8 lg:gap-20">
                         <div className="flex items-center gap-3">
                             <input
@@ -338,13 +348,13 @@ export default function SellerProductAdd({ role }: SellerProductAddProps) {
 
                 {/* Location */}
                 <div className="flex flex-col items-start gap-3 sm:gap-4 lg:gap-5 w-full">
-                    <h1 className="text-xl sm:text-2xl lg:text-[32px] font-bold">Location <span className="text-red-500">*</span></h1>
+                    <h1 className="text-xl sm:text-2xl lg:text-[32px] font-bold">{t('Location')} <span className="text-red-500">*</span></h1>
                     <div className="relative w-full">
                         <input
                             type="text"
                             value={searchQuery}
                             onChange={handleSearchChange}
-                            placeholder="Cari alamat..."
+                            placeholder={t('addres')}
                             className="w-full p-3 sm:p-4 border-2 rounded-lg text-base sm:text-lg focus:outline-none focus:ring-2 focus:ring-[#2A6C86]"
                         />
                         {suggestions.length > 0 && (
@@ -389,16 +399,21 @@ export default function SellerProductAdd({ role }: SellerProductAddProps) {
                 <div className="flex flex-col sm:flex-row justify-end gap-3 sm:gap-5 w-full mt-4 sm:mt-6 lg:mt-5 pb-6">
                     <button
                         type="button"
-                        onClick={() => window.location.href="/Seller/product"}
+                        onClick={() => {
+                            const path = window.location.pathname;
+                            const match = path.match(/^\/([a-z]{2})\//);
+                            const locale = match ? match[1] : 'id';
+                            window.location.href = `/${locale}/Seller/product`;
+                        }}
                         className="w-full sm:w-40 lg:w-[197px] h-12 sm:h-14 lg:h-[62px] border-2 border-gray-600 font-bold text-lg sm:text-xl lg:text-[28px] cursor-pointer rounded-lg hover:bg-gray-100 transition-colors"
                     >
-                        Cancel
+                        {t('cancel')}
                     </button>
                     <button
                         type="submit"
                         className="w-full sm:w-44 lg:w-[220px] h-12 sm:h-14 lg:h-[62px] bg-[#2A6C86] hover:bg-[#1f5468] text-white font-bold text-lg sm:text-xl lg:text-[28px] cursor-pointer rounded-lg transition-colors shadow-md"
                     >
-                        Add Product
+                        {t('Add Product')}
                     </button>
                 </div>
             </div>

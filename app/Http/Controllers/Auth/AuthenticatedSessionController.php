@@ -45,7 +45,14 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended(route('dashboard', absolute: false));
+        $locale = $request->route('locale') ?? 'id';
+        $userRole = $user->role ?? 'Buyer';
+        if ($userRole === 'Buyer') {
+            return redirect()->intended(route('BuyerHome', ['locale' => $locale], absolute: false));
+        } elseif ($userRole === 'Seller') {
+            return redirect()->intended(route('SellerHome', ['locale' => $locale], absolute: false));
+        }
+        return redirect()->intended(route('home', ['locale' => $locale], absolute: false));
     }
 
     /**
@@ -58,6 +65,7 @@ class AuthenticatedSessionController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect('/');
+        $locale = $request->route('locale') ?? 'id';
+        return redirect()->route('home', ['locale' => $locale]);
     }
 }
