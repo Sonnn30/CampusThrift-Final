@@ -251,6 +251,14 @@ export default function ProductCatalogNavbar({
                             />
                         </button>
 
+                        <button
+                            onClick={toggleLanguage}
+                            className="w-full flex items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-[14px] font-medium transition hover:bg-gray-100"
+                        >
+                            <img src="/language.png" alt="language" className="h-[20px] w-[20px]" />
+                            {getLocale().toUpperCase()}
+                        </button>
+
                         {!isLoggedIn ? (
                             <button
                                 onClick={goToLogin}
