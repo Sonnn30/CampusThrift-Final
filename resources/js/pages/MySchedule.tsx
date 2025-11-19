@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useTransition } from "react";
 import { format, addMonths, subMonths } from "date-fns";
 import { DayPicker } from "react-day-picker";
 import Month from "./Month";
 import dayjs from "dayjs";
-import { router } from "@inertiajs/react";
+import { router, usePage } from "@inertiajs/react";
+import useTranslation from "@/Hooks/useTranslation";
+import ProductCatalogNavbar from "./ProductCatalogNavbar";
 
 export default function MySchedule({role, appointments, events}: any) {
     // Read ?date=YYYY-MM-DD from URL to focus calendar week after redirect
@@ -19,9 +21,21 @@ export default function MySchedule({role, appointments, events}: any) {
         const savedRole = localStorage.getItem("role");
     }, []);
 
+    const { props } = usePage();
+    const user = (props as any)?.auth?.user ?? props?.user ?? null;
+    const resolvedRole = role ?? props?.role ?? user?.role ?? 'Guest';
+    const isLoggedIn = Boolean(user);
+
+    const getLocale = () => {
+        const path = window.location.pathname;
+        const match = path.match(/^\/([a-z]{2})\//);
+        return match ? match[1] : 'id';
+    };
+
     // Handle appointment status update for sellers
     const handleStatusUpdate = (appointmentId: any, status: any) => {
-        router.patch(`/Seller/appointment/${appointmentId}/status`, {
+        const locale = getLocale();
+        router.patch(`/${locale}/Seller/appointment/${appointmentId}/status`, {
             status: status
         }, {
             onSuccess: () => {
@@ -61,16 +75,19 @@ export default function MySchedule({role, appointments, events}: any) {
 
     const handleNext = () => setCurrMonth(addMonths(currMonth, 1));
     const handlePrev = () => setCurrMonth(subMonths(currMonth, 1));
+    const {t} = useTranslation()
 
   return (
-    <div className="w-full min-h-screen bg-[#ECEEDF] p-4 sm:p-6 lg:p-0">
+    <>
+    <ProductCatalogNavbar user={user} role={resolvedRole} isLoggedIn={isLoggedIn} compact />
+    <div className="w-full min-h-screen bg-[#ECEEDF] pt-0 px-4 pb-4 sm:px-6 sm:pb-6 lg:p-0">
       <div className="flex flex-col lg:flex-row max-w-[1920px] mx-auto">
         {/* LEFT PANEL - Calendar & Appointments */}
         <div className="w-full lg:w-[500px] xl:w-[600px] flex flex-col bg-white lg:border-r-4 border-[#BBDCE5] shadow-lg lg:shadow-none">
           {/* Calendar Header */}
           <div className="flex flex-col w-full">
             <div className="flex justify-between items-center w-full border-b-2 border-[#BBDCE5] px-4 sm:px-6 lg:px-10 py-4 sm:py-6">
-              <h1 className="text-xl sm:text-2xl lg:text-[28px] font-bold">Appointment Calendar</h1>
+              <h1 className="text-xl sm:text-2xl lg:text-[28px] font-bold">{t('Appointment Calendar')}</h1>
               <div className="flex gap-2">
                 <button
                   className="flex justify-center items-center bg-[#BBDCE5] hover:bg-[#9FCAD8] px-3 py-2 rounded-full w-[36px] h-[36px] sm:w-[40px] sm:h-[40px] cursor-pointer transition-colors"
@@ -139,26 +156,26 @@ export default function MySchedule({role, appointments, events}: any) {
             <div className="px-4 sm:px-6 lg:px-10 pb-4 flex flex-wrap gap-3 text-xs sm:text-sm">
               <div className="flex items-center gap-2">
                 <div className="w-4 h-4 bg-blue-400 rounded-full"></div>
-                <span>Today</span>
+                <span>{t('Today')}</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-4 h-4 bg-gray-400 rounded-full"></div>
-                <span>Pending</span>
+                <span>{t('Pending')}</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-4 h-4 bg-green-500 rounded-full"></div>
-                <span>Confirmed</span>
+                <span>{t('Confirmed')}</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-4 h-4 bg-red-500 rounded-full"></div>
-                <span>Rejected</span>
+                <span>{t('Rejected')}</span>
               </div>
             </div>
           </div>
 
           {/* Appointment List */}
           <div className="flex items-center px-4 sm:px-6 lg:px-10 py-4 border-t-2 border-b-2 border-[#BBDCE5] bg-gray-50">
-            <h1 className="text-lg sm:text-xl lg:text-[24px] font-bold">Appointment List</h1>
+            <h1 className="text-lg sm:text-xl lg:text-[24px] font-bold">{t('Appointment List')}</h1>
           </div>
 
           {/* Appointments */}
@@ -173,7 +190,7 @@ export default function MySchedule({role, appointments, events}: any) {
                   <div className="flex items-center gap-3 flex-shrink-0">
                     <div className="flex flex-col items-center gap-1">
                       <img src="/user.png" alt="user" className="w-10 h-10 sm:w-[45px] sm:h-[45px] rounded-full border-2 border-gray-300" />
-                      {e.buyer_name && role === "Seller" && (
+                      {e.buyer_name && resolvedRole === "Seller" && (
                         <p className="text-xs sm:text-[14px] font-bold text-center">{e.buyer_name}</p>
                       )}
                     </div>
@@ -182,7 +199,7 @@ export default function MySchedule({role, appointments, events}: any) {
                   {/* Appointment Details */}
                   <div className="flex-1 min-w-0">
                     <h2 className="text-base sm:text-lg lg:text-[22px] font-semibold truncate">
-                      <a href={`/${role}/TransactionDetail?appointment_id=${e.id}`} className="hover:text-blue-600 transition-colors">
+                      <a href={`/${getLocale()}/${resolvedRole}/TransactionDetail?appointment_id=${e.id}`} className="hover:text-blue-600 transition-colors">
                         {e.title}
                       </a>
                     </h2>
@@ -199,14 +216,14 @@ export default function MySchedule({role, appointments, events}: any) {
                     </div>
 
                     {/* Status/Actions */}
-                    {role === "Buyer" ? (
+                    {resolvedRole === "Buyer" ? (
                       <span className={`flex justify-center items-center rounded text-xs sm:text-sm lg:text-[16px] px-3 py-1.5 font-bold ${
                         e.status === 'confirmed' ? 'bg-green-200 text-green-800' :
                         e.status === 'rejected' ? 'bg-red-200 text-red-800' :
                         e.status === 'completed' ? 'bg-blue-200 text-blue-800' :
                         'bg-yellow-200 text-yellow-800'
                       }`}>
-                        {e.status ? e.status.charAt(0).toUpperCase() + e.status.slice(1) : 'Pending'}
+                        {t(e.status ? e.status.charAt(0).toUpperCase() + e.status.slice(1) : 'Pending')}
                       </span>
                     ) : (
                       <div className="flex gap-2">
@@ -233,7 +250,7 @@ export default function MySchedule({role, appointments, events}: any) {
                             e.status === 'completed' ? 'bg-blue-200 text-blue-800' :
                             'bg-red-200 text-red-800'
                           }`}>
-                            {e.status ? e.status.charAt(0).toUpperCase() + e.status.slice(1) : 'Pending'}
+                            {t(e.status ? e.status.charAt(0).toUpperCase() + e.status.slice(1) : 'Pending')}
                           </span>
                         )}
                       </div>
@@ -246,7 +263,7 @@ export default function MySchedule({role, appointments, events}: any) {
                 <svg className="w-16 h-16 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
-                <p className="text-lg">No appointments scheduled</p>
+                <p className="text-lg">{t('NoSchedules')}</p>
               </div>
             )}
           </div>
@@ -287,11 +304,12 @@ export default function MySchedule({role, appointments, events}: any) {
           </div>
           <div className="overflow-x-auto">
             <div className="min-w-[600px] h-[500px] sm:h-[600px] lg:h-[870px]">
-              <Month daysInWeek={daysInWeek} events={backendEvents} role={role} />
+              <Month daysInWeek={daysInWeek} events={backendEvents} role={resolvedRole} />
             </div>
           </div>
         </div>
       </div>
     </div>
+    </>
   );
 }

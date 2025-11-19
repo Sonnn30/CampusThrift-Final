@@ -115,7 +115,8 @@ class TransactionDetailController extends Controller
             $txn->status = 'completed';
             $txn->save();
             // For buyer, redirect to review page instead of confirm page
-            return redirect()->route('BuyerReview', ['appointment_id' => $appointment->id])->with('success', 'Completed, redirecting to review.');
+            $locale = $request->route('locale') ?? 'id';
+            return redirect()->route('BuyerReview', ['locale' => $locale, 'appointment_id' => $appointment->id])->with('success', 'Completed, redirecting to review.');
         }
         $txn->save();
         return redirect()->back()->with('success', 'Waiting for seller confirmation.');
@@ -151,7 +152,8 @@ class TransactionDetailController extends Controller
             $appointment->update(['status' => 'completed']);
             $txn->status = 'completed';
             $txn->save();
-            return redirect()->route('ConfirmPage', ['appointment_id' => $appointment->id])->with('success', 'Appointment completed.');
+            $locale = $request->route('locale') ?? 'id';
+            return redirect()->route('ConfirmPage', ['locale' => $locale, 'appointment_id' => $appointment->id])->with('success', 'Appointment completed.');
         }
         $txn->save();
         return redirect()->back()->with('success', 'Waiting for buyer confirmation.');
@@ -180,7 +182,8 @@ class TransactionDetailController extends Controller
         }
 
         if (!$appointment) {
-            return redirect()->route('SellerMySchedule')->with('error', 'No completed appointment found.');
+            $locale = $request->route('locale') ?? 'id';
+            return redirect()->route('SellerMySchedule', ['locale' => $locale])->with('error', 'No completed appointment found.');
         }
 
         // Authorization: seller must own the product

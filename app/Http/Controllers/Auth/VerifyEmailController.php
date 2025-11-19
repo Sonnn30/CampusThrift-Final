@@ -13,12 +13,26 @@ class VerifyEmailController extends Controller
      */
     public function __invoke(EmailVerificationRequest $request): RedirectResponse
     {
+        $locale = $request->route('locale') ?? 'id';
+        $user = $request->user();
+        $userRole = $user->role ?? 'Buyer';
+
         if ($request->user()->hasVerifiedEmail()) {
-            return redirect()->intended(route('dashboard', absolute: false).'?verified=1');
+            if ($userRole === 'Buyer') {
+                return redirect()->intended(route('BuyerHome', ['locale' => $locale], absolute: false).'?verified=1');
+            } elseif ($userRole === 'Seller') {
+                return redirect()->intended(route('SellerHome', ['locale' => $locale], absolute: false).'?verified=1');
+            }
+            return redirect()->intended(route('home', ['locale' => $locale], absolute: false).'?verified=1');
         }
 
         $request->fulfill();
 
-        return redirect()->intended(route('dashboard', absolute: false).'?verified=1');
+        if ($userRole === 'Buyer') {
+            return redirect()->intended(route('BuyerHome', ['locale' => $locale], absolute: false).'?verified=1');
+        } elseif ($userRole === 'Seller') {
+            return redirect()->intended(route('SellerHome', ['locale' => $locale], absolute: false).'?verified=1');
+        }
+        return redirect()->intended(route('home', ['locale' => $locale], absolute: false).'?verified=1');
     }
 }

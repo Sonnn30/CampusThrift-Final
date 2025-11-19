@@ -1,6 +1,8 @@
 import ProductCard_ProductGrid from './ProductCard_ProductGrid';
+import useTranslation from '@/Hooks/useTranslation';
 
 export default function SellerProductCard({ role, products }) {
+    const {t} = useTranslation()
     return (
         <div className="w-full min-h-[400px] bg-gray-50">
             {/* Container with responsive padding */}
@@ -10,10 +12,10 @@ export default function SellerProductCard({ role, products }) {
                         {/* Products Header */}
                         <div className="mb-6 sm:mb-8">
                             <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-800">
-                                Products ({products.length})
+                                {t('Products')} ({products.length})
                             </h2>
                             <p className="text-sm sm:text-base text-gray-600 mt-1">
-                                {role === "Seller" ? "Manage your product listings" : "Browse available products"}
+                                {t(role === "Seller" ? "Manage your product listings" : "Browse available products")}
                             </p>
                         </div>
 
@@ -62,7 +64,12 @@ export default function SellerProductCard({ role, products }) {
                             {/* Action Button (Only for Seller) */}
                             {role === "Seller" && (
                                 <button
-                                    onClick={() => window.location.href = `/${role}/product/add`}
+                                    onClick={() => {
+                                        const path = window.location.pathname;
+                                        const match = path.match(/^\/([a-z]{2})\//);
+                                        const locale = match ? match[1] : 'id';
+                                        window.location.href = `/${locale}/${role}/product/add`;
+                                    }}
                                     className="w-full sm:w-auto px-6 py-3 bg-[#BBDCE5] hover:bg-[#A8D2E0] text-gray-800 font-semibold rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg"
                                 >
                                     Add Your First Product

@@ -1,8 +1,9 @@
 import { motion } from "framer-motion"
 import { useState, useEffect } from "react"
-import { Link } from "@inertiajs/react"
+import { Link, usePage } from "@inertiajs/react"
 import ReactMarkdown from "react-markdown";
 import { router } from "@inertiajs/react";
+import useTranslation from '@/Hooks/useTranslation';
 
 
 export default function SignUp({flash}){
@@ -15,6 +16,7 @@ export default function SignUp({flash}){
     const [value2, setValue2] = useState("")
     const [value3, setValue3] = useState("")
     const [value4, setValue4] = useState("")
+    const [valid_1, setValid_1] = useState(false)
 
     const [selected, setSelected] = useState("Buyer")
 
@@ -24,7 +26,12 @@ export default function SignUp({flash}){
         "animate2": {scale: 1}
     }
 
+    const { locale } = usePage().props;
     const handleSubmit = (e) => {
+    if (selected === "Seller" && !value.includes("@binus.ac.id")) {
+        alert("Seller must use a valid @binus.ac.id email!");
+        return;
+    }
     e.preventDefault();
     console.log("Sending data:", {
         name: value3,
@@ -34,7 +41,8 @@ export default function SignUp({flash}){
         role: selected,
     });
 
-    router.post("/SignUp", {
+
+    router.post(`/${locale}/SignUp`, {
         name: value3,
         email: value,
         password: value2,
@@ -50,7 +58,7 @@ export default function SignUp({flash}){
 
     const handleSelect = (option) => {
         setSelected(option)
-        setOpen(false) // tutup dropdown setelah pilih
+        setOpen(false)
     }
 
     useEffect(() => {
@@ -58,6 +66,20 @@ export default function SignUp({flash}){
         alert(flash.error);
         }
     }, [flash]);
+        const emailvalidation = (val, selected) => {
+        if (selected === "Seller") {
+            setValid_1(val.includes("@binus.ac.id"));
+        } else {
+            setValid_1(true);
+        }
+    };
+
+
+    useEffect(() => {
+        emailvalidation(value, selected)
+    }, [value, selected])
+
+    const {t} = useTranslation()
 
     return(
         <>
@@ -73,7 +95,7 @@ export default function SignUp({flash}){
                 {/* Role Selector */}
                 <div className="flex flex-col sm:flex-row justify-center items-center gap-2 sm:gap-0">
                     {/* Label */}
-                    <h2 className="text-xl sm:text-2xl lg:text-[30px] font-medium">Sign Up as</h2>
+                    <h2 className="text-xl sm:text-2xl lg:text-[30px] font-medium">{t('Sign Up as')}</h2>
 
                     {/* Dropdown wrapper */}
                     <div className="relative">
@@ -82,7 +104,7 @@ export default function SignUp({flash}){
                             onClick={() => setOpen(!open)}
                             className="text-xl sm:text-2xl lg:text-[30px] flex items-center gap-2 rounded-md px-3 py-1 hover:bg-white/20 transition-colors"
                         >
-                            <span className="font-semibold">{selected}</span>
+                            <span className="font-semibold">{t(selected)}</span>
                             <img
                                 src={open ? "/arrow-up.png" : "/arrow-down.png"}
                                 alt="toggle"
@@ -100,7 +122,7 @@ export default function SignUp({flash}){
                                             onClick={() => handleSelect(option)}
                                             className="px-4 py-2 hover:bg-gray-100 cursor-pointer transition-colors text-base sm:text-lg"
                                         >
-                                            {option}
+                                            {t(option)}
                                         </li>
                                     ))}
                                 </ul>
@@ -116,7 +138,7 @@ export default function SignUp({flash}){
                         variants={variants}
                         animate={click3 || value3 !== "" ? "animate1" : "animate2"}
                     >
-                        UserName
+                        {t('Username')}
                     </motion.p>
                     <input
                         type="text"
@@ -129,22 +151,27 @@ export default function SignUp({flash}){
                 </div>
 
                 {/* Email Input */}
-                <div className="relative w-full max-w-[465px] h-[50px] sm:h-[53px] border-2 rounded-2xl flex items-center">
-                    <motion.p
-                        className="flex absolute left-2 justify-center text-base sm:text-lg lg:text-[20px] bg-[#BBDCE5] px-2 rounded"
-                        variants={variants}
-                        animate={click || value !== "" ? "animate1" : "animate2"}
-                    >
-                        Email
-                    </motion.p>
-                    <input
-                        type="text"
-                        className="w-full px-4 sm:px-5 h-[40px] border-none outline-none text-base sm:text-lg bg-transparent"
-                        value={value}
-                        onChange={(e) => setValue(e.target.value)}
-                        onFocus={() => setClick(true)}
-                        onBlur={() => setClick(false)}
-                    />
+                <div className="w-full max-w-[465px] h-[50px] sm:h-[53px]">
+                    <div className="relative w-full max-w-[465px] h-[50px] sm:h-[53px] border-2 rounded-2xl flex items-center">
+                        <motion.p
+                            className="flex absolute left-2 justify-center text-base sm:text-lg lg:text-[20px] bg-[#BBDCE5] px-2 rounded"
+                            variants={variants}
+                            animate={click || value !== "" ? "animate1" : "animate2"}
+                        >
+                            {t('Email')}
+                        </motion.p>
+                        <input
+                            type="text"
+                            className="w-full px-4 sm:px-5 h-[40px] border-none outline-none text-base sm:text-lg bg-transparent"
+                            value={value}
+                            onChange={(e) => setValue(e.target.value)}
+                            onFocus={() => setClick(true)}
+                            onBlur={() => setClick(false)}
+                        />
+                    </div>
+                    {selected === "Seller" && !valid_1 &&(
+                        <p className="text-red-600 text-sm mt-1">{t('Email Valid')}</p>
+                    )}
                 </div>
 
                 {/* Password Input */}
@@ -154,7 +181,7 @@ export default function SignUp({flash}){
                         variants={variants}
                         animate={click2 || value2 !== "" ? "animate1" : "animate2"}
                     >
-                        Password
+                        {t('Password')}
                     </motion.p>
                     <input
                         type="password"
@@ -173,7 +200,7 @@ export default function SignUp({flash}){
                         variants={variants}
                         animate={click4 || value4 !== "" ? "animate1" : "animate2"}
                     >
-                        Confirm Password
+                        {t('Confirm Password')}
                     </motion.p>
                     <input
                         type="password"
@@ -195,7 +222,7 @@ export default function SignUp({flash}){
 
                 {/* Log In Link */}
                 <div className="text-sm sm:text-base text-center mt-1">
-                    Already have an account? <Link href="/login" className="underline font-semibold hover:text-blue-700 transition-colors">Log In</Link>
+                    {t("Already have")} <Link href={`/${locale}/login`} className="underline font-semibold hover:text-blue-700 transition-colors">Log In</Link>
                 </div>
             </div>
         </div>

@@ -3,6 +3,8 @@ import { format } from "date-fns";
 import Picker from "react-mobile-picker";
 import { router } from '@inertiajs/react';
 import CODTimeRoute from '@/routes/CODTime';
+import useTranslation from "@/Hooks/useTranslation";
+
 
 interface Product {
     id: number;
@@ -19,16 +21,23 @@ interface CODTimeProps {
 }
 
 export default function CODTime({ product, selectedDate, availableTimes }: CODTimeProps){
+    const getLocale = () => {
+        const path = window.location.pathname;
+        const match = path.match(/^\/([a-z]{2})\//);
+        return match ? match[1] : 'id';
+    };
+
     const goToNext = () => {
         if (!date) return;
 
         const selectedTime = `${value.hour}:${value.minute}`;
+        const locale = getLocale();
 
-        router.post(CODTimeRoute.store.url(), {
+        router.post(CODTimeRoute.store.url({ locale }), {
             time: selectedTime
         }, {
             onSuccess: () => {
-                window.location.href = "/COD/location";
+                window.location.href = `/${locale}/COD/location`;
             },
             onError: (errors) => {
                 console.error('Error submitting time:', errors);
@@ -38,7 +47,8 @@ export default function CODTime({ product, selectedDate, availableTimes }: CODTi
     }
 
     const goBack = () => {
-        router.get('/COD/date', { product_id: product.id });
+        const locale = getLocale();
+        router.get(`/${locale}/COD/date`, { product_id: product.id });
     }
     const [date, setDate] = useState<Date | null>(null)
 
@@ -48,6 +58,7 @@ export default function CODTime({ product, selectedDate, availableTimes }: CODTi
         }
     }, [selectedDate])
     const [value, setValue] = useState({ hour: "12", minute: "30" });
+    const {t} = useTranslation()
 
     return(
         <>
@@ -55,7 +66,7 @@ export default function CODTime({ product, selectedDate, availableTimes }: CODTi
                 {/* Header */}
                 <div className="flex flex-col items-center mt-4 sm:mt-8 lg:mt-12 mb-6 sm:mb-8 lg:mb-10">
                     <h2 className="text-2xl sm:text-3xl lg:text-[40px] font-semibold text-gray-700">COD</h2>
-                    <h1 className="text-3xl sm:text-4xl lg:text-[54px] font-bold text-center">Select your date & time</h1>
+                    <h1 className="text-3xl sm:text-4xl lg:text-[54px] font-bold text-center">{t('Select Your')}</h1>
                 </div>
 
                 {/* Main Container */}
@@ -74,7 +85,7 @@ export default function CODTime({ product, selectedDate, availableTimes }: CODTi
 
                             {/* Title */}
                             <div>
-                                <h1 className="text-2xl sm:text-3xl lg:text-[40px] font-bold text-gray-800">Select Time Page</h1>
+                                <h1 className="text-2xl sm:text-3xl lg:text-[40px] font-bold text-gray-800">{t('Select')}</h1>
                             </div>
 
                             {/* Selected Date Display */}
@@ -107,7 +118,7 @@ export default function CODTime({ product, selectedDate, availableTimes }: CODTi
                             className="w-full mt-6 lg:mt-8 rounded-xl h-[56px] sm:h-[60px] lg:h-[68px] bg-[#BBDCE5] text-xl sm:text-2xl lg:text-[32px] font-semibold hover:bg-[#a8cbd6] hover:shadow-lg active:scale-[0.98] transition-all duration-200 cursor-pointer"
                             onClick={goToNext}
                         >
-                            Next
+                            {t('Next')}
                         </button>
                     </div>
 
@@ -116,7 +127,7 @@ export default function CODTime({ product, selectedDate, availableTimes }: CODTi
                         <div className="w-full">
                             {/* Header with Back Button */}
                             <div className="flex justify-between items-center mb-6 sm:mb-8">
-                                <h1 className="text-xl sm:text-2xl lg:text-[32px] font-bold">Select Time</h1>
+                                <h1 className="text-xl sm:text-2xl lg:text-[32px] font-bold">{t('SelectTime')}</h1>
                                 <button
                                     onClick={goBack}
                                     className="p-2 hover:bg-gray-100 rounded-full transition-colors"
@@ -174,8 +185,8 @@ export default function CODTime({ product, selectedDate, availableTimes }: CODTi
 
                 {/* Helper Text (Mobile) */}
                 <div className="lg:hidden mt-4 text-center text-sm text-gray-600">
-                    <p>🕐 Scroll to select hour and minute</p>
-                    <p className="mt-1">Choose your preferred time for COD</p>
+                    <p>🕐 {t('Scroll')}</p>
+                    <p className="mt-1">{t('Choosetime')}</p>
                 </div>
             </div>
 

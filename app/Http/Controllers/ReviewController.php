@@ -72,8 +72,9 @@ class ReviewController extends Controller
         ]);
 
         $user = Auth::user();
+        $locale = $request->route('locale') ?? 'id';
         $redirectRoute = strtolower($user->role) === 'seller' ? 'SellerMySchedule' : 'BuyerMySchedule';
-        return redirect()->route($redirectRoute)->with('success', 'Thank you for your review!');
+        return redirect()->route($redirectRoute, ['locale' => $locale])->with('success', 'Thank you for your review!');
     }
 }
 

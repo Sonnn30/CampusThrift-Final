@@ -1,7 +1,9 @@
 import { motion } from "framer-motion"
-import { useState, useEffect } from "react"
+import { useState, useEffect, use } from "react"
 import { Link } from "@inertiajs/react"
 import { Inertia } from "@inertiajs/inertia";
+import { set } from "date-fns";
+import useTranslation from '@/Hooks/useTranslation';
 
 export default function Login(){
     const [click, setClick] = useState(false)
@@ -10,6 +12,7 @@ export default function Login(){
     const [value2, setValue2] = useState("")
     const [open, setOpen] = useState(false)
     const [selected, setSelected] = useState("Buyer")
+    const [valid_1, setValid_1] = useState(false)
     const variants = {
         "animate1": {scale: 0.75, x:-5, y:-27},
         "animate2": {scale: 1}
@@ -29,12 +32,40 @@ export default function Login(){
     }
 
     const handleLogin = () => {
-        Inertia.post('/login', {
+        if (selected === "Seller" && !value.includes("@binus.ac.id")) {
+            alert("Seller must use a valid @binus.ac.id email!");
+            return;
+        }
+        const getLocale = () => {
+            const path = typeof window !== 'undefined' ? window.location.pathname : '';
+            const match = path.match(/^\/([a-z]{2})\//);
+            return match ? match[1] : 'id';
+        };
+        const locale = getLocale();
+        Inertia.post(`/${locale}/login`, {
             email: value,
             password: value2,
             role: selected
         })
     }
+
+    const emailvalidation = (val, selected) => {
+        if (selected === "Seller") {
+            setValid_1(val.includes("@binus.ac.id"));
+        } else {
+            setValid_1(true);
+        }
+    };
+
+
+    useEffect(() => {
+        emailvalidation(value, selected)
+    }, [value, selected])
+
+    console.log(valid_1)
+    console.log(selected)
+
+    const {t} = useTranslation()
 
     return(
         <>
@@ -50,7 +81,7 @@ export default function Login(){
                 {/* Role Selector */}
                 <div className="flex flex-col sm:flex-row justify-center items-center gap-2 sm:gap-0">
                     {/* Label */}
-                    <h2 className="text-xl sm:text-2xl lg:text-[30px] font-medium">Log In as</h2>
+                    <h2 className="text-xl sm:text-2xl lg:text-[30px] font-medium">{t('Log In as')}</h2>
 
                     {/* Dropdown wrapper */}
                     <div className="relative">
@@ -59,7 +90,7 @@ export default function Login(){
                             onClick={() => setOpen(!open)}
                             className="text-xl sm:text-2xl lg:text-[30px] flex items-center gap-2 rounded-md px-3 py-1 hover:bg-white/20 transition-colors"
                         >
-                            <span className="font-semibold">{selected}</span>
+                            <span className="font-semibold">{t(selected)}</span>
                             <img
                                 src={open ? "/arrow-up.png" : "/arrow-down.png"}
                                 alt="toggle"
@@ -77,7 +108,7 @@ export default function Login(){
                                             onClick={() => handleSelect(option)}
                                             className="px-4 py-2 hover:bg-gray-100 cursor-pointer transition-colors text-base sm:text-lg"
                                         >
-                                            {option}
+                                            {t(option)}
                                         </li>
                                     ))}
                                 </ul>
@@ -87,22 +118,28 @@ export default function Login(){
                 </div>
 
                 {/* Email Input */}
-                <div className="relative w-full max-w-[465px] h-[50px] sm:h-[53px] border-2 rounded-2xl flex items-center ">
-                    <motion.p
-                        className="flex absolute left-2 justify-center text-base sm:text-lg lg:text-[20px] bg-[#BBDCE5] px-2 rounded"
-                        variants={variants}
-                        animate={click || value !== "" ? "animate1" : "animate2"}
-                    >
-                        Email
-                    </motion.p>
-                    <input
-                        type="text"
-                        className="w-full px-4 sm:px-5 h-[40px] border-none outline-none text-base sm:text-lg bg-transparent"
-                        value={value}
-                        onChange={(e) => setValue(e.target.value)}
-                        onFocus={() => setClick(true)}
-                        onBlur={() => setClick(false)}
-                    />
+                <div className=" w-full max-w-[465px] h-[50px] sm:h-[53px]">
+                    <div className="relative w-full max-w-[465px] h-[50px] sm:h-[53px] border-2 rounded-2xl flex items-center ">
+                        <motion.p
+                            className="flex absolute left-2 justify-center text-base sm:text-lg lg:text-[20px] bg-[#BBDCE5] px-2 rounded"
+                            variants={variants}
+                            animate={click || value !== "" ? "animate1" : "animate2"}
+                        >
+                            {t('Email')}
+                        </motion.p>
+                        <input
+                            type="text"
+                            className="w-full px-4 sm:px-5 h-[40px] border-none outline-none text-base sm:text-lg bg-transparent"
+                            value={value}
+                            onChange={(e) => setValue(e.target.value)}
+                            onFocus={() => setClick(true)}
+                            onBlur={() => setClick(false)}
+                        />
+                    </div>
+                    {selected === "Seller" && !valid_1 &&(
+                        <p className="text-red-600 text-sm mt-1">{t('Email Valid')}</p>
+                    )}
+
                 </div>
 
                 {/* Password Input */}
@@ -112,7 +149,7 @@ export default function Login(){
                         variants={variants}
                         animate={click2 || value2 !== "" ? "animate1" : "animate2"}
                     >
-                        Password
+                        {t('Password')}
                     </motion.p>
                     <input
                         type="password"
@@ -134,7 +171,11 @@ export default function Login(){
 
                 {/* Sign Up Link */}
                 <div className="text-sm sm:text-base text-center">
-                    Don't have account? <Link href="/SignUp" className="underline font-semibold hover:text-blue-700 transition-colors">Sign Up</Link>
+                    {t("Don't have")} <Link href={`/${(() => {
+                        const path = typeof window !== 'undefined' ? window.location.pathname : '';
+                        const match = path.match(/^\/([a-z]{2})\//);
+                        return match ? match[1] : 'id';
+                    })()}/SignUp`} className="underline font-semibold hover:text-blue-700 transition-colors">Sign Up</Link>
                 </div>
             </div>
         </div>

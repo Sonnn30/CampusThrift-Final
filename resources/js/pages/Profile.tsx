@@ -2,6 +2,7 @@ import { useState } from "react"
 import { useForm } from "@inertiajs/react";
 import { usePage } from "@inertiajs/react";
 import axios from 'axios';
+import useTranslation from "@/Hooks/useTranslation";
 
 interface Transaction {
     date: string;
@@ -15,7 +16,7 @@ interface Transaction {
     appointment_id?: number;
 }
 
-export default function Profile({role , profile}){
+export default function Profile({ role, profile }) {
     const [completed, setCompleted] = useState(false)
     const [reported, setReported] = useState(false)
     const [selected, setSelected] = useState(false)
@@ -38,9 +39,11 @@ export default function Profile({role , profile}){
     }>();
 
     const user = props.auth?.user;
+    const currentRole = (props.role ?? role ?? 'Buyer') as string;
+    const profileData = props.profile ?? profile ?? {};
     const completedTransactions = props.completedTransactions || [];
 
-    console.log(role)
+    console.log(currentRole)
     console.log('Completed Transactions:', completedTransactions);
 
     const handleReportSubmit = async () => {
@@ -65,7 +68,13 @@ export default function Profile({role , profile}){
         }
 
         try {
-            const response = await axios.post(`/Profile/${role}/report`, {
+            const locale = getLocale();
+            if (reportedUserId && reportedUserId === user?.id) {
+                alert("You cannot report yourself.");
+                return;
+            }
+
+            const response = await axios.post(`/${locale}/Profile/${currentRole}/report`, {
                 reported_id: reportedUserId,
                 appointment_id: appointmentId,
                 reasons: reasons,
@@ -91,36 +100,41 @@ export default function Profile({role , profile}){
         }
     };
 
+    const getLocale = () => {
+        const path = typeof window !== 'undefined' ? window.location.pathname : '';
+        const match = path.match(/^\/([a-z]{2})\//);
+        return match ? match[1] : 'id';
+    };
+
     const { data, setData, post, processing, errors } = useForm({
-        firstname: profile?.firstname || "",
-        lastname: profile?.lastname || "",
-        angkatan: profile?.angkatan || "",
-        university: profile?.university || "",
-        email: profile?.email || "",
+        firstname: profileData?.firstname || "",
+        lastname: profileData?.lastname || "",
+        angkatan: profileData?.angkatan || "",
+        university: profileData?.university || "",
+        email: profileData?.email || "",
     });
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        post(`/Profile/${role}`);
-        axios.post(`/Profile/${role}`, data)
-        .then(res => {
-            console.log(res.data);
-            alert('Profile berhasil disimpan!');
-        })
-        .catch(err => {
-            console.error(err.response?.data);
-            alert('Gagal menyimpan profile');
+        const locale = getLocale();
+        post(`/${locale}/Profile/${currentRole}`, {
+            onSuccess: () => {
+                alert('Profile berhasil disimpan!');
+            },
+            onError: () => {
+                alert('Gagal menyimpan profile');
+            },
         });
     };
 // axios.post('/Profile/Seller', data)
 //      .then(res => console.log(res.data));
-
+    const {t} = useTranslation()
     return(
         <>
             <div className="flex flex-col items-center justify-center gap-6 sm:gap-8 lg:gap-10 w-full min-h-screen py-6 sm:py-8 lg:py-10 px-4 sm:px-6 lg:px-8 bg-gray-50">
                 {/* Header */}
                 <div className="flex justify-between items-center w-full max-w-[1350px]">
-                    <h1 className="text-2xl sm:text-3xl lg:text-[38px] font-semibold">{role} Profile</h1>
+                    <h1 className="text-2xl sm:text-3xl lg:text-[38px] font-semibold">{currentRole} {t('Profile')}</h1>
                     <img
                         src="/editblack.png"
                         alt="edit"
@@ -153,13 +167,13 @@ export default function Profile({role , profile}){
                 {/* Personal Information Card */}
                 <div className="flex flex-col gap-4 w-full max-w-[1350px] shadow-2xl rounded-2xl px-6 sm:px-8 lg:px-10 py-6 sm:py-8 bg-white">
                     <div className="flex justify-start">
-                        <h1 className="text-2xl sm:text-3xl lg:text-[38px] font-bold">Personal Information</h1>
+                        <h1 className="text-2xl sm:text-3xl lg:text-[38px] font-bold">{t('Personal')}</h1>
                     </div>
                     <form onSubmit={handleSubmit} className="flex flex-col lg:flex-row gap-8 lg:gap-20 xl:gap-80 py-4 sm:py-6 lg:py-10">
                         {/* Left Column */}
                         <div className="flex flex-col gap-8 sm:gap-12 lg:gap-20 text-base sm:text-xl lg:text-[24px] flex-1">
                             <div className="flex flex-col gap-2">
-                                <p className="text-[#2A6C86] font-semibold">First name</p>
+                                <p className="text-[#2A6C86] font-semibold">{t('First name')}</p>
                                 {isHidden ? (
                                     <input type="text"
                                         value={data.firstname}
@@ -171,7 +185,7 @@ export default function Profile({role , profile}){
                                 )}
                             </div>
                             <div className="flex flex-col gap-2">
-                                <p className="text-[#2A6C86] font-semibold">Email address</p>
+                                <p className="text-[#2A6C86] font-semibold">{t('Email address')}</p>
                                 {isHidden ? (
                                     <input type="text"
                                         value={data.email}
@@ -187,7 +201,7 @@ export default function Profile({role , profile}){
                         {/* Right Column */}
                         <div className="flex flex-col gap-8 sm:gap-12 lg:gap-20 text-base sm:text-xl lg:text-[24px] flex-1">
                             <div className="flex flex-col gap-2">
-                                <p className="text-[#2A6C86] font-semibold">Last name</p>
+                                <p className="text-[#2A6C86] font-semibold">{t('Last name')}</p>
                                 {isHidden ? (
                                     <input type="text"
                                         value={data.lastname}
@@ -199,7 +213,7 @@ export default function Profile({role , profile}){
                                 )}
                             </div>
                             <div className="flex flex-col gap-2">
-                                <p className="text-[#2A6C86] font-semibold">University</p>
+                                <p className="text-[#2A6C86] font-semibold">{t('University')}</p>
                                 {isHidden ? (
                                     <input type="text"
                                         value={data.university}
@@ -217,17 +231,17 @@ export default function Profile({role , profile}){
                 {/* Credibility Card */}
                 <div className="flex flex-col gap-4 w-full max-w-[1350px] shadow-2xl rounded-2xl px-6 sm:px-8 lg:px-10 py-6 sm:py-8 bg-white">
                     <div className="flex justify-start">
-                        <h1 className="text-2xl sm:text-3xl lg:text-[38px] font-bold">Credibility</h1>
+                        <h1 className="text-2xl sm:text-3xl lg:text-[38px] font-bold">{t('Credibility')}</h1>
                     </div>
                     <div className="flex flex-col sm:flex-row gap-8 sm:gap-12 lg:gap-20 xl:gap-92 py-4 sm:py-6 lg:py-10">
                         {/* Left Column */}
                         <div className="flex flex-col gap-8 sm:gap-12 lg:gap-20 text-base sm:text-xl lg:text-[24px] flex-1">
                             <div className="flex flex-col gap-2">
-                                <p className="text-[#2A6C86] font-semibold">Item selled</p>
+                                <p className="text-[#2A6C86] font-semibold">{t('Item selled')}</p>
                                 <p className="text-gray-700">n selled</p>
                             </div>
                             <div className="flex flex-col gap-2">
-                                <p className="text-[#2A6C86] font-semibold">Response time</p>
+                                <p className="text-[#2A6C86] font-semibold">{t('Response time')}</p>
                                 <p className="text-gray-700">1 hour</p>
                             </div>
                         </div>
@@ -235,11 +249,11 @@ export default function Profile({role , profile}){
                         {/* Right Column */}
                         <div className="flex flex-col gap-8 sm:gap-12 lg:gap-20 text-base sm:text-xl lg:text-[24px] flex-1">
                             <div className="flex flex-col gap-2">
-                                <p className="text-[#2A6C86] font-semibold">Status</p>
+                                <p className="text-[#2A6C86] font-semibold">{t('Status')}</p>
                                 <p className="text-green-600 font-semibold">Online</p>
                             </div>
                             <div className="flex flex-col gap-2">
-                                <p className="text-[#2A6C86] font-semibold">Account age</p>
+                                <p className="text-[#2A6C86] font-semibold">{t('Account age')}</p>
                                 <p className="text-gray-700">1 Year</p>
                             </div>
                         </div>
@@ -265,13 +279,13 @@ export default function Profile({role , profile}){
                     ) : (
                         <>
                             <div className="w-full sm:w-[48%] lg:w-[670px] h-[60px] sm:h-[70px] lg:h-[75px] bg-[#8CF375] hover:bg-[#7BE363] flex justify-center items-center text-xl sm:text-2xl lg:text-[32px] rounded-3xl cursor-pointer border-2 border-gray-300 transition-colors" onClick={()=> setCompleted(!completed)}>
-                                <button onClick={() => setCompleted(!completed)} className="cursor-pointer font-semibold">Completed Transaction</button>
+                                <button onClick={() => setCompleted(!completed)} className="cursor-pointer font-semibold">{t('Completed Transaction')}</button>
                             </div>
                             <div className="w-full sm:w-[48%] lg:w-[670px] h-[60px] sm:h-[70px] lg:h-[75px] bg-[#F64848] hover:bg-[#E53939] flex justify-center items-center text-xl sm:text-2xl lg:text-[32px] rounded-3xl cursor-pointer border-2 border-gray-300 transition-colors" onClick={()=> {
                                 // Set default reported user (dari transaksi terakhir jika ada)
                                 if (completedTransactions.length > 0) {
                                     const lastTransaction = completedTransactions[0];
-                                    setReportedUserId(role === 'Seller' ? lastTransaction.buyer_id : lastTransaction.seller_id);
+                                    setReportedUserId(currentRole === 'Seller' ? lastTransaction.buyer_id : lastTransaction.seller_id);
                                     setAppointmentId(lastTransaction.appointment_id || null);
                                 }
                                 setReported(!reported);
@@ -279,11 +293,11 @@ export default function Profile({role , profile}){
                                 <button onClick={() => {
                                     if (completedTransactions.length > 0) {
                                         const lastTransaction = completedTransactions[0];
-                                        setReportedUserId(role === 'Seller' ? lastTransaction.buyer_id : lastTransaction.seller_id);
+                                        setReportedUserId(currentRole === 'Seller' ? lastTransaction.buyer_id : lastTransaction.seller_id);
                                         setAppointmentId(lastTransaction.appointment_id || null);
                                     }
                                     setReported(!reported);
-                                }} className="cursor-pointer font-semibold">Report {role === 'Seller' ? 'Buyer' : 'Seller'}</button>
+                                }} className="cursor-pointer font-semibold">{t('Report')} {currentRole === 'Seller' ? 'Buyer' : 'Seller'}</button>
                             </div>
                         </>
                     )}
@@ -294,7 +308,7 @@ export default function Profile({role , profile}){
                         <div className="flex flex-col w-full max-w-[900px] max-h-[90vh] bg-[#BBDCE5] border-2 rounded-2xl sm:rounded-3xl overflow-hidden">
                             {/* Modal Header */}
                             <div className="w-full flex justify-between items-center px-4 sm:px-6 lg:px-8 py-4 sm:py-6 border-b-2 border-[#9FCAD8] bg-[#A8D2E0]">
-                                <h1 className="text-xl sm:text-2xl lg:text-[32px] font-bold">All Transactions</h1>
+                                <h1 className="text-xl sm:text-2xl lg:text-[32px] font-bold">{t('All Transaction')}</h1>
                                 <button
                                     onClick={() => setCompleted(!completed)}
                                     className="w-8 h-8 sm:w-10 sm:h-10 flex justify-center items-center rounded-full hover:bg-[#9FCAD8] transition-colors"
@@ -399,7 +413,7 @@ export default function Profile({role , profile}){
                                         <svg className="w-16 h-16 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                         </svg>
-                                        <p className="text-lg font-semibold">No completed transactions</p>
+                                        <p className="text-lg font-semibold">{t('No Completed Transaction')}</p>
                                     </div>
                                 )}
                             </div>
@@ -413,7 +427,7 @@ export default function Profile({role , profile}){
                             {/* Modal Header */}
                             <div className="w-full flex justify-between items-center px-4 sm:px-6 lg:px-10 py-4 sm:py-6 border-b-2 border-gray-200 bg-red-50">
                                 <h1 className="text-2xl sm:text-3xl lg:text-[48px] font-bold text-[#F64848]">
-                                    Report {role === 'Seller' ? 'Buyer' : 'Seller'}
+                                    {t('Report')} {t(currentRole === 'Seller' ? 'Buyer' : 'Seller')}
                                 </h1>
                                 <button
                                     onClick={() => setReported(!reported)}
@@ -426,7 +440,7 @@ export default function Profile({role , profile}){
                             {/* Modal Content - Scrollable */}
                             <div className="flex-1 overflow-auto px-4 sm:px-6 lg:px-10 py-4 sm:py-6">
                                 <h2 className="text-lg sm:text-xl lg:text-[32px] font-semibold mb-4 sm:mb-6">
-                                    Why are you reporting this {role === 'Seller' ? 'buyer' : 'seller'}?
+                                    {t('Why')} {t(currentRole === 'Seller' ? 'Buyer' : 'Seller')}
                                 </h2>
 
                                 <div className="flex flex-col gap-3 sm:gap-4 lg:gap-5">
@@ -447,7 +461,7 @@ export default function Profile({role , profile}){
                                             )}
                                         </div>
                                         <span className="text-sm sm:text-lg lg:text-[24px] xl:text-[28px] text-[#F64848] font-medium">
-                                            {role === 'Seller' ? 'Buyer' : 'Seller'} didn't show up
+                                            {t(currentRole === 'Seller' ? 'Buyer' : 'Seller')} {t("didn't show")}
                                         </span>
                                     </div>
 
@@ -468,7 +482,7 @@ export default function Profile({role , profile}){
                                             )}
                                         </div>
                                         <span className="text-sm sm:text-lg lg:text-[24px] xl:text-[28px] text-[#F64848] font-medium">
-                                            {role === 'Seller' ? 'Buyer' : 'Seller'} asked to lower the price too much
+                                            {t(currentRole === 'Seller' ? 'Buyer' : 'Seller')} {t('Buyerprice')}
                                         </span>
                                     </div>
 
@@ -489,7 +503,7 @@ export default function Profile({role , profile}){
                                             )}
                                         </div>
                                         <span className="text-sm sm:text-lg lg:text-[24px] xl:text-[28px] text-[#F64848] font-medium">
-                                            Changed meeting time/place suddenly
+                                            {t('Buyerchanged')}
                                         </span>
                                     </div>
 
@@ -510,7 +524,7 @@ export default function Profile({role , profile}){
                                             )}
                                         </div>
                                         <span className="text-sm sm:text-lg lg:text-[24px] xl:text-[28px] text-[#F64848] font-medium">
-                                            Safety concerns about the {role === 'Seller' ? 'buyer' : 'seller'}
+                                            {t('Buyersafety')} {t(currentRole === 'Seller' ? 'Buyer' : 'Seller')}
                                         </span>
                                     </div>
 
@@ -531,7 +545,7 @@ export default function Profile({role , profile}){
                                             )}
                                         </div>
                                         <span className="text-sm sm:text-lg lg:text-[24px] xl:text-[28px] text-[#F64848] font-medium">
-                                            Checked too many times but not serious
+                                            {t('Buyerserious')}
                                         </span>
                                     </div>
 
@@ -552,7 +566,7 @@ export default function Profile({role , profile}){
                                             )}
                                         </div>
                                         <span className="text-sm sm:text-lg lg:text-[24px] xl:text-[28px] text-[#F64848] font-medium">
-                                            Seemed suspicious
+                                            {t('Buyersuspicious')}
                                         </span>
                                     </div>
 
@@ -573,7 +587,7 @@ export default function Profile({role , profile}){
                                             )}
                                         </div>
                                         <span className="text-sm sm:text-lg lg:text-[24px] xl:text-[28px] text-[#F64848] font-medium">
-                                            Didn't follow the agreed COD location
+                                            {t('Buyerlocation')}
                                         </span>
                                     </div>
 
@@ -594,7 +608,7 @@ export default function Profile({role , profile}){
                                             )}
                                         </div>
                                         <span className="text-sm sm:text-lg lg:text-[24px] xl:text-[28px] text-[#F64848] font-medium">
-                                            Didn't agree with product condition
+                                            {t('Buyercondition')}
                                         </span>
                                     </div>
                                 </div>

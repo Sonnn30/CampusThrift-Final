@@ -17,7 +17,8 @@ class EnsureBuyerRole
     public function handle(Request $request, Closure $next): Response
     {
         if (!Auth::check()) {
-            return redirect()->route('login');
+            $locale = $request->route('locale') ?? 'id';
+            return redirect()->route('login', ['locale' => $locale]);
         }
 
         $user = Auth::user();

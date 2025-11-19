@@ -59,7 +59,8 @@ class CODController extends Controller
         session(['cod_date' => $request->date]);
         session(['cod_product_id' => $request->product_id]);
 
-        return redirect()->route('CODTime');
+        $locale = $request->route('locale') ?? 'id';
+        return redirect()->route('CODTime', ['locale' => $locale]);
     }
 
     /**
@@ -78,7 +79,8 @@ class CODController extends Controller
         $productId = session('cod_product_id');
 
         if (!$date || !$productId) {
-            return redirect()->route('CODDate')->with('error', 'Please select a date first');
+            $locale = request()->route('locale') ?? 'id';
+            return redirect()->route('CODDate', ['locale' => $locale])->with('error', 'Please select a date first');
         }
 
         $product = Product::findOrFail($productId);
@@ -112,7 +114,8 @@ class CODController extends Controller
         // Store time in session
         session(['cod_time' => $request->time]);
 
-        return redirect()->route('CODLocation');
+        $locale = $request->route('locale') ?? 'id';
+        return redirect()->route('CODLocation', ['locale' => $locale]);
     }
 
     /**
@@ -132,7 +135,8 @@ class CODController extends Controller
         $productId = session('cod_product_id');
 
         if (!$date || !$time || !$productId) {
-            return redirect()->route('CODDate')->with('error', 'Please complete date and time selection first');
+            $locale = request()->route('locale') ?? 'id';
+            return redirect()->route('CODDate', ['locale' => $locale])->with('error', 'Please complete date and time selection first');
         }
 
         $product = Product::findOrFail($productId);
@@ -165,7 +169,8 @@ class CODController extends Controller
         $productId = session('cod_product_id');
 
         if (!$date || !$time || !$productId) {
-            return redirect()->route('CODDate')->with('error', 'Please complete date and time selection first');
+            $locale = request()->route('locale') ?? 'id';
+            return redirect()->route('CODDate', ['locale' => $locale])->with('error', 'Please complete date and time selection first');
         }
 
         $product = Product::findOrFail($productId);
@@ -239,7 +244,8 @@ class CODController extends Controller
         session()->forget(['cod_date', 'cod_time', 'cod_product_id']);
 
         // Redirect to MySchedule with date query so the calendar focuses the correct week
-        return redirect()->route('BuyerMySchedule', ['date' => $request->date])
+        $locale = $request->route('locale') ?? 'id';
+        return redirect()->route('BuyerMySchedule', ['locale' => $locale, 'date' => $request->date])
             ->with('success', 'COD appointment created successfully!');
     }
 

@@ -126,7 +126,7 @@ class MyScheduleController extends Controller
     /**
      * Update appointment status (for sellers)
      */
-    public function updateStatus(Request $request, Appointment $appointment)
+    public function updateStatus(Request $request, $routeLocale, Appointment $appointment)
     {
         $user = Auth::user();
 
@@ -156,13 +156,14 @@ class MyScheduleController extends Controller
         $txn->status = $request->status;
         $txn->save();
 
-        return redirect()->route('SellerMySchedule')->with('success', 'Appointment status updated successfully!');
+        $locale = $routeLocale ?? ($request->route('locale') ?? 'id');
+        return redirect()->route('SellerMySchedule', ['locale' => $locale])->with('success', 'Appointment status updated successfully!');
     }
 
     /**
      * Cancel appointment (for buyers)
      */
-    public function cancelAppointment(Request $request, Appointment $appointment)
+    public function cancelAppointment(Request $request, $routeLocale, Appointment $appointment)
     {
         $user = Auth::user();
 
@@ -180,7 +181,8 @@ class MyScheduleController extends Controller
             'status' => 'cancelled'
         ]);
 
-        return redirect()->route('BuyerMySchedule')->with('success', 'Appointment cancelled successfully!');
+        $locale = $routeLocale ?? ($request->route('locale') ?? 'id');
+        return redirect()->route('BuyerMySchedule', ['locale' => $locale])->with('success', 'Appointment cancelled successfully!');
     }
 
     /**

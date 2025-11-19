@@ -1,12 +1,26 @@
+import useTranslation from "@/Hooks/useTranslation";
+
 export default function ProductCard_ProductGrid({ role, product }) {
+    const getLocale = () => {
+        const path = window.location.pathname;
+        const match = path.match(/^\/([a-z]{2})\//);
+        return match ? match[1] : 'id';
+    };
+
     function goToProductDetail() {
-        window.location.href = `/${role}/ProductDetail/${product.id}`;
+        const locale = getLocale();
+        window.location.href = `/${locale}/${role}/ProductDetail/${product.id}`;
     }
     function goToChat() {
+        if (role !== "Buyer") {
+            alert("Only buyers can start a chat with sellers.");
+            return;
+        }
         // Chat dengan seller dari product ini
         const sellerId = product.user_id || product.seller_id;
         if (sellerId) {
-            window.location.href = `/${role}/chat/${sellerId}`;
+            const locale = getLocale();
+            window.location.href = `/${locale}/${role}/chat/${sellerId}`;
         } else {
             alert("Seller information not available");
         }
@@ -14,11 +28,13 @@ export default function ProductCard_ProductGrid({ role, product }) {
 
     function goToMakeAppointment() {
         if (role === "Buyer") {
-            window.location.href = `/COD/date?product_id=${product.id}`;
+            const locale = getLocale();
+            window.location.href = `/${locale}/COD/date?product_id=${product.id}`;
         } else {
             alert("Just Buyer Can Make Appointment! Please Log In With Buyer Role");
         }
     }
+    const {t} = useTranslation()
 
     return (
         <div className="flex flex-col gap-4 w-[350px] rounded-2xl border border-neutral-200 bg-neutral-100 p-5 shadow-sm transition-transform duration-200 ease-in-out hover:scale-[1.01] hover:shadow-[0_8px_20px_rgba(0,180,255,0.18)] cursor-pointer">
@@ -45,13 +61,13 @@ export default function ProductCard_ProductGrid({ role, product }) {
                             className="h-[18px] w-[18px]"
                         />
                         <span className="font-medium">
-                            Seller ID #{product.id}
+                            {t('Seller')} ID #{product.id}
                         </span>
                     </div>
 
                     {/* PRICE */}
                     <div className="mt-2 mb-2 text-base font-medium max-[1000px]:text-sm max-[575px]:text-xs">
-                        Price: Rp{product.product_price.toLocaleString('id-ID')}
+                        {t('Price')}: Rp{product.product_price.toLocaleString('id-ID')}
                     </div>
                 </div>
             </div>
@@ -62,7 +78,7 @@ export default function ProductCard_ProductGrid({ role, product }) {
                     className="flex-1 mr-2 rounded-lg px-3 py-1 text-center cursor-pointer text-[20px]"
                     onClick={goToMakeAppointment}
                 >
-                    Make Appointment
+                    {t('Make Appointment')}
                 </button>
                 <img
                     src="/ProductCard_assets/chat.png"

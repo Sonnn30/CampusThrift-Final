@@ -3,6 +3,7 @@ import { format } from "date-fns";
 import { DayPicker } from 'react-day-picker';
 import { router } from '@inertiajs/react';
 import CODDateRoute from '@/routes/CODDate';
+import useTranslation from "@/Hooks/useTranslation";
 
 interface Product {
     id: number;
@@ -21,6 +22,12 @@ export default function CODDate({ product }: CODDateProps){
     const [isSubmitting, setIsSubmitting] = React.useState(false);
     const [error, setError] = React.useState<string | null>(null);
 
+    const getLocale = () => {
+        const path = typeof window !== 'undefined' ? window.location.pathname : '';
+        const match = path.match(/^\/([a-z]{2})\//);
+        return match ? match[1] : 'id';
+    };
+
     const goToNext = () => {
         if(!selected){
             setError("Please select a date");
@@ -38,7 +45,9 @@ export default function CODDate({ product }: CODDateProps){
         setIsSubmitting(true);
         setError(null);
 
-        router.post(CODDateRoute.store.url(), {
+        const locale = getLocale();
+
+        router.post(CODDateRoute.store.url({ locale }), {
             product_id: product.id,
             date: format(selected, 'yyyy-MM-dd')
         }, {
@@ -58,13 +67,15 @@ export default function CODDate({ product }: CODDateProps){
         });
     }
 
+    const {t} = useTranslation()
+
     return(
         <>
             <div className="flex flex-col justify-center items-center w-full min-h-screen p-4 sm:p-6 lg:p-10 bg-gray-50">
                 {/* Header */}
                 <div className="flex flex-col items-center mt-4 sm:mt-8 lg:mt-12 mb-6 sm:mb-8 lg:mb-10">
                     <h2 className="text-2xl sm:text-3xl lg:text-[40px] font-semibold text-gray-700">COD</h2>
-                    <h1 className="text-3xl sm:text-4xl lg:text-[54px] font-bold text-center">Select your date & time</h1>
+                    <h1 className="text-3xl sm:text-4xl lg:text-[54px] font-bold text-center">{t('Select Your')}</h1>
                 </div>
 
                 {/* Main Container */}
@@ -83,7 +94,7 @@ export default function CODDate({ product }: CODDateProps){
 
                             {/* Title */}
                             <div>
-                                <h1 className="text-2xl sm:text-3xl lg:text-[40px] font-bold text-gray-800">Select Date Page</h1>
+                                <h1 className="text-2xl sm:text-3xl lg:text-[40px] font-bold text-gray-800">{t('Select')}</h1>
                             </div>
 
                             {/* Selected Date Display */}
@@ -94,7 +105,7 @@ export default function CODDate({ product }: CODDateProps){
                                     className="w-8 h-8 sm:w-10 sm:h-10"
                                 />
                                 <p className="text-lg sm:text-xl lg:text-[24px] font-medium">
-                                    {selected ? format(selected, "dd/MM/yyyy") : "No date selected"}
+                                    {selected ? format(selected, "dd/MM/yyyy") : t("No Date")}
                                 </p>
                             </div>
 
@@ -116,14 +127,14 @@ export default function CODDate({ product }: CODDateProps){
                             onClick={goToNext}
                             disabled={isSubmitting}
                         >
-                            {isSubmitting ? "Processing..." : "Next"}
+                            {isSubmitting ? "Processing..." : t("Next")}
                         </button>
                     </div>
 
                     {/* Right Panel - Calendar */}
                     <div className="flex-1 lg:flex-[1.2] flex flex-col items-center lg:items-start p-6 sm:p-8 lg:p-10 bg-white">
                         <div className="w-full">
-                            <h1 className="text-xl sm:text-2xl lg:text-[32px] font-bold mb-4 sm:mb-6 text-center lg:text-left">Select a Date</h1>
+                            <h1 className="text-xl sm:text-2xl lg:text-[32px] font-bold mb-4 sm:mb-6 text-center lg:text-left">{t('SelectDate')}</h1>
                             <div className="flex justify-center lg:justify-start">
                                 <DayPicker
                                     mode="single"
@@ -159,8 +170,8 @@ export default function CODDate({ product }: CODDateProps){
 
                 {/* Helper Text (Mobile) */}
                 <div className="lg:hidden mt-4 text-center text-sm text-gray-600">
-                    <p>📅 Select a date from the calendar above</p>
-                    <p className="mt-1">Choose a date after today to continue</p>
+                    <p>{t('SelectaDate')}</p>
+                    <p className="mt-1">{t('ChooseDate')}</p>
                 </div>
             </div>
         </>

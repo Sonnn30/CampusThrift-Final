@@ -32,7 +32,13 @@ class ProductController extends Controller
                     'product_price' => $product->product_price,
                     'description' => $product->description,
                     'category' => is_string($product->category) ? strtolower($product->category) : ($product->category ?? null),
-                    'images' => $product->getMedia('product_images')->map(fn($m) => $m->getUrl()),
+                    'images' => $product->getMedia('product_images')->map(function($m) {
+                        $url = $m->getUrl();
+                        if (!filter_var($url, FILTER_VALIDATE_URL)) {
+                            return url($url);
+                        }
+                        return $url;
+                    }),
                     'user_id' => $product->user_id,
                     'seller_id' => $product->user_id,
                 ];
@@ -72,7 +78,13 @@ class ProductController extends Controller
                 'description' => $product->description,
                 'category' => is_string($product->category) ? strtolower($product->category) : ($product->category ?? null),
                 'seller_name' => $product->user->name ?? 'Unknown Seller',
-                'images' => $product->getMedia('product_images')->map(fn($m) => $m->getUrl()),
+                'images' => $product->getMedia('product_images')->map(function($m) {
+                    $url = $m->getUrl();
+                    if (!filter_var($url, FILTER_VALIDATE_URL)) {
+                        return url($url);
+                    }
+                    return $url;
+                }),
                 'sales_count' => $salesCount,
                 'user_id' => $product->user_id,
                 'seller_id' => $product->user_id,
@@ -95,8 +107,9 @@ class ProductController extends Controller
         ]);
     }
 
-public function edit(Product $product)
+public function edit($locale, $product)
 {
+    $product = Product::with('media')->findOrFail($product);
     // $this->authorize('update', $product); opsional, jika pakai policy
 
     return Inertia::render('SellerProductEdit', [
@@ -111,7 +124,13 @@ public function edit(Product $product)
                 : json_decode($product->shipping_method ?? '[]', true),
             'location' => $product->location,
             'category' => $product->category,
-            'images' => $product->getMedia('product_images')->map(fn($m) => $m->getUrl()),
+            'images' => $product->getMedia('product_images')->map(function($m) {
+                $url = $m->getUrl();
+                if (!filter_var($url, FILTER_VALIDATE_URL)) {
+                    return url($url);
+                }
+                return $url;
+            }),
         ],
     ]);
 }
@@ -170,7 +189,8 @@ public function edit(Product $product)
         'image_count' => $request->hasFile('images') ? count($request->file('images')) : 0,
     ]);
 
-        return to_route('SellerProduct')->with('success', 'Product created successfully!');
+        $locale = $request->route('locale') ?? 'id';
+        return redirect()->route('SellerProduct', ['locale' => $locale])->with('success', 'Product created successfully!');
 
     } catch (\Illuminate\Validation\ValidationException $e) {
         Log::error('Validation error:', $e->errors());
@@ -182,8 +202,10 @@ public function edit(Product $product)
 }
 
 // Update product
-public function update(Request $request, Product $product)
+public function update(Request $request, $locale, $product)
 {
+    $product = Product::with('media')->findOrFail($product);
+
     $request->validate([
         'product_name'    => 'required|string|max:255',
         'product_price'   => 'required|numeric',
@@ -244,7 +266,8 @@ public function update(Request $request, Product $product)
         }
     }
 
-    return to_route('SellerProductDetail', ['id' => $product->id])
+    $locale = $request->route('locale') ?? 'id';
+    return redirect()->route('SellerProductDetail', ['locale' => $locale, 'id' => $product->id])
         ->with('success', 'Product updated successfully!');
 }
 
@@ -252,14 +275,29 @@ public function update(Request $request, Product $product)
     // Show single product
 // In ProductController.php inside the show() method
 
-public function show($id)
+public function show(Request $request)
 {
-    $product = Product::with('media', 'user')->findOrFail($id);
+    $productId = $request->route('id');
+    Log::info('Product detail requested', ['id' => $productId, 'url' => $request->fullUrl()]);
+    try {
+        $product = Product::with('media', 'user')->findOrFail($productId);
+    } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+        Log::warning('Product not found for detail page', ['id' => $productId]);
+        $locale = $request->route('locale') ?? 'id';
+        return redirect()->route('home', ['locale' => $locale])->with('error', 'Product not found');
+    }
 
     // Get images or set a default
     $images = $product->getMedia('product_images');
     $imageUrls = $images->isNotEmpty()
-        ? $images->map(fn($m) => $m->getUrl())
+        ? $images->map(function($m) {
+            $url = $m->getUrl();
+            // Ensure absolute URL
+            if (!filter_var($url, FILTER_VALIDATE_URL)) {
+                return url($url);
+            }
+            return $url;
+        })
         : [asset('placeholder-2.png')];
 
     // Fetch other products from the same seller (exclude current product)
@@ -274,7 +312,14 @@ public function show($id)
                 'id' => $p->id,
                 'product_name' => $p->product_name,
                 'product_price' => $p->product_price,
-                'images' => $p->getMedia('product_images')->map(fn($m) => $m->getUrl()),
+                'images' => $p->getMedia('product_images')->map(function($m) {
+                    $url = $m->getUrl();
+                    // Ensure absolute URL
+                    if (!filter_var($url, FILTER_VALIDATE_URL)) {
+                        return url($url);
+                    }
+                    return $url;
+                }),
             ];
         });
 
@@ -326,9 +371,11 @@ public function show($id)
 
 
     // Hapus product
-    public function destroy(Product $product)
+    public function destroy(Request $request, $locale, $product)
     {
+        $product = Product::findOrFail($product);
         $product->delete();
-        return redirect()->route('SellerProduct')->with('success', 'Product deleted successfully!');
+        $locale = $request->route('locale') ?? 'id';
+        return redirect()->route('SellerProduct', ['locale' => $locale])->with('success', 'Product deleted successfully!');
     }
 }

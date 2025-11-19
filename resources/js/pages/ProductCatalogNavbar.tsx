@@ -1,36 +1,70 @@
 import { Link } from '@inertiajs/react';
 import { useState } from 'react';
 import { router } from '@inertiajs/react';
+import useTranslation from '@/Hooks/useTranslation';
 
-export default function ProductCatalogNavbar({user, role, isLoggedIn, onCategoryChange, category, categoryCounts, onSearch, searchQuery}: {user:any, role:any, isLoggedIn:any, onCategoryChange?: (c: string | null) => void, category?: string | null, categoryCounts?: Map<string, number> | Record<string, number> | null, onSearch?: (q: string) => void, searchQuery?: string}) {
+type CategoryCounts = Map<string, number> | Record<string, number> | null;
+
+export default function ProductCatalogNavbar({
+    user,
+    role,
+    isLoggedIn,
+    onCategoryChange,
+    category,
+    categoryCounts,
+    onSearch,
+    searchQuery,
+    compact = false,
+}: {
+    user: any;
+    role: any;
+    isLoggedIn: any;
+    onCategoryChange?: (c: string | null) => void;
+    category?: string | null;
+    categoryCounts?: CategoryCounts;
+    onSearch?: (q: string) => void;
+    searchQuery?: string;
+    compact?: boolean;
+}) {
     const [ishidden, setIsHidden] = useState(false)
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
+    const getLocale = () => {
+        const path = window.location.pathname;
+        const match = path.match(/^\/([a-z]{2})\//);
+        return match ? match[1] : 'id';
+    };
+
     function goToSchedule(){
-        window.location.href = `/${role}/MySchedule`
+        const locale = getLocale();
+        window.location.href = `/${locale}/${role}/MySchedule`
     }
     function goToProfile(){
-        window.location.href = `/Profile/${role}`
+        const locale = getLocale();
+        window.location.href = `/${locale}/Profile/${role}`
     }
     function goToLogin(){
-        window.location.href = `/login`
+        const locale = getLocale();
+        window.location.href = `/${locale}/login`
     }
     function goToMyStore(){
-        window.location.href = `/Seller/product`
+        const locale = getLocale();
+        window.location.href = `/${locale}/Seller/product`
     }
     function goToLocationRecommendation(){
         if (isLoggedIn) {
             alert(
-                "Safe COD Location Recommendations:\n\n" +
-                "📍 Campus Kemanggisan\n" +
-                "📍 Campus Syahdan\n" +
-                "📍 Binus Square Food Court\n" +
-                "📍 Anggrek Campus Library\n\n" +
-                "Select a product and click 'Make Appointment' to schedule a COD meeting!"
+                t('Safe COD') +
+                t("Kemanggisan Campus") +
+                t('Syahdan Campus') +
+                t("Binus Square") +
+                t("Anggrek Libra") +
+                t("SelectMake")
             );
         } else {
             alert("Please login first to view location recommendations");
-            window.location.href = `/login`
+            const locale = getLocale();
+            window.location.href = `/${locale}/login`
         }
     }
 
@@ -39,8 +73,22 @@ export default function ProductCatalogNavbar({user, role, isLoggedIn, onCategory
     }
 
     function handleLogout() {
-        router.post("/logout");
+        const locale = getLocale();
+        router.post(`/${locale}/logout`);
     }
+
+    function toggleLanguage() {
+        const currentLocale = getLocale();
+        const nextLocale = currentLocale === 'en' ? 'id' : 'en';
+        const pathWithoutLocale = window.location.pathname.replace(/^\/[a-z]{2}/, "");
+        const newUrl = `/${nextLocale}${pathWithoutLocale}${window.location.search}${window.location.hash}`;
+        window.location.href = newUrl;
+    }
+
+    const { t } = useTranslation();
+
+
+    const showCategoryBar = !compact && !!categoryCounts;
 
     return (
         <>
@@ -50,7 +98,7 @@ export default function ProductCatalogNavbar({user, role, isLoggedIn, onCategory
                 <div className="flex w-full lg:w-auto items-center justify-between lg:justify-start">
                     {/* Logo */}
                     <div className="flex-shrink-0">
-                        <Link href="/" className="cursor-pointer block">
+                        <Link href={`/${getLocale()}/`} className="cursor-pointer block">
                         <img
                             src="/LogoCampusTrrft2.png"
                             alt="Logo"
@@ -80,7 +128,7 @@ export default function ProductCatalogNavbar({user, role, isLoggedIn, onCategory
                         <input
                             className="h-[42px] w-full rounded-full border-none bg-white pl-4 pr-10 text-[14px] lg:text-[16px] font-medium text-black focus:ring-2 focus:ring-[#4b9cd3] focus:outline-none"
                             type="text"
-                            placeholder="Search..."
+                            placeholder={t('Search')}
                             value={searchQuery ?? ""}
                             onChange={(e) => { if (typeof onSearch === 'function') onSearch(e.target.value); }}
                         />
@@ -98,7 +146,7 @@ export default function ProductCatalogNavbar({user, role, isLoggedIn, onCategory
                         onClick={goToLocationRecommendation}
                         className="flex cursor-pointer items-center gap-2 rounded-full border border-gray-300 bg-white px-3 xl:px-4 py-2 text-[14px] xl:text-[16px] font-medium transition duration-200 ease-in-out hover:-translate-y-0.5 hover:bg-gray-100"
                     >
-                        <span className="hidden xl:inline">Location</span>
+                        <span className="hidden xl:inline">{t('Location')}</span>
                         <img
                             className="inline-flex h-[20px] xl:h-[25px] w-[20px] xl:w-[25px]"
                             src="/ProductCatalogNavbar_assets/location-logo.png"
@@ -110,7 +158,7 @@ export default function ProductCatalogNavbar({user, role, isLoggedIn, onCategory
                         className="flex cursor-pointer items-center gap-2 rounded-full border border-gray-300 bg-white px-3 xl:px-4 py-2 text-[14px] xl:text-[16px] font-medium transition duration-200 ease-in-out hover:-translate-y-0.5 hover:bg-gray-100"
                         onClick={goToSchedule}
                     >
-                        <span className="hidden xl:inline">My Schedule</span>
+                        <span className="hidden xl:inline">{t('MySchedule')}</span>
                         <img
                             className="inline-flex h-[20px] xl:h-[25px] w-[20px] xl:w-[25px]"
                             src="/ProductCatalogNavbar_assets/schedule-calender-logo.png"
@@ -121,7 +169,7 @@ export default function ProductCatalogNavbar({user, role, isLoggedIn, onCategory
                     <div className="h-10 w-px bg-gray-600"></div>
 
                     {/* Profile Section (Desktop) */}
-                    <div className="mr-2 flex cursor-pointer items-center gap-2 text-[14px] xl:text-[16px]">
+                    <div className=" flex cursor-pointer items-center gap-2 text-[14px] xl:text-[16px]">
                     {!isLoggedIn ? (
                         <div
                                 className="w-[100px] xl:w-[120px] h-[40px] rounded-2xl flex justify-center items-center bg-white border-2 cursor-pointer hover:bg-gray-100 transition-colors"
@@ -137,7 +185,7 @@ export default function ProductCatalogNavbar({user, role, isLoggedIn, onCategory
                                     src="/ProductCatalogNavbar_assets/user.png"
                                     alt="profile_pict"
                                 />
-                                    <p className="hidden xl:block">Hello, {user?.name ?? "please login"} ({role ?? "Guest"})</p>
+                                    <p className="hidden xl:block">{t('Hello')}, {user?.name ?? "please login"} ({role ?? "Guest"})</p>
                                     <p className="xl:hidden">Hi, {user?.name?.split(' ')[0] ?? "User"}</p>
                             </div>
                             {ishidden && (
@@ -146,14 +194,14 @@ export default function ProductCatalogNavbar({user, role, isLoggedIn, onCategory
                                             onClick={goToProfile}
                                             className='bg-white hover:bg-gray-100 border-b w-[140px] px-5 py-3 text-left cursor-pointer transition-colors'
                                         >
-                                            My Profile
+                                            {t('MyProfile')}
                                         </button>
                                         {role === "Seller" && (
                                             <button
                                                 onClick={goToMyStore}
                                                 className='bg-white hover:bg-gray-100 border-b w-[140px] px-5 py-3 text-left cursor-pointer transition-colors'
                                             >
-                                                My Store
+                                                {t('MyStore')}
                                             </button>
                                         )}
                                         <button
@@ -167,6 +215,13 @@ export default function ProductCatalogNavbar({user, role, isLoggedIn, onCategory
                         </div>
                     )}
                     </div>
+                    <button
+                        onClick={toggleLanguage}
+                        className='flex justify-center items-center gap-2 bg-white mx-3 w-15 py-2 border text-[14px] font-medium border-black rounded-full transition duration-200 ease-in-out hover:-translate-y-0.5 hover:bg-gray-100'
+                    >
+                        <img src="/language.png" alt="language" width={22} height={22}/>
+                        <p className='text-[#10px]'>{getLocale().toUpperCase()}</p>
+                    </button>
                 </div>
 
                 {/* Mobile Menu */}
@@ -176,7 +231,7 @@ export default function ProductCatalogNavbar({user, role, isLoggedIn, onCategory
                             onClick={goToLocationRecommendation}
                             className="w-full flex items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-[14px] font-medium transition hover:bg-gray-100"
                         >
-                            Location
+                            {t('Location')}
                             <img
                                 className="h-[20px] w-[20px]"
                                 src="/ProductCatalogNavbar_assets/location-logo.png"
@@ -188,7 +243,7 @@ export default function ProductCatalogNavbar({user, role, isLoggedIn, onCategory
                             onClick={goToSchedule}
                             className="w-full flex items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-[14px] font-medium transition hover:bg-gray-100"
                         >
-                            My Schedule
+                            {t('MySchedule')}
                             <img
                                 className="h-[20px] w-[20px]"
                                 src="/ProductCatalogNavbar_assets/schedule-calender-logo.png"
@@ -209,14 +264,14 @@ export default function ProductCatalogNavbar({user, role, isLoggedIn, onCategory
                                     onClick={goToProfile}
                                     className="w-full rounded-lg bg-white border border-gray-300 px-4 py-2.5 text-[14px] font-medium hover:bg-gray-100 transition-colors text-left"
                                 >
-                                    👤 My Profile
+                                    👤 {t('MyProfile')}
                                 </button>
                                 {role === "Seller" && (
                                     <button
                                         onClick={goToMyStore}
                                         className="w-full rounded-lg bg-white border border-gray-300 px-4 py-2.5 text-[14px] font-medium hover:bg-gray-100 transition-colors text-left"
                                     >
-                                        🏪 My Store
+                                        🏪 {t('MyStore')}
                                     </button>
                                 )}
                                 <button
@@ -235,6 +290,8 @@ export default function ProductCatalogNavbar({user, role, isLoggedIn, onCategory
             </div>
 
             {/* Categories Section */}
+            {showCategoryBar && (
+            <>
             <div className="flex flex-wrap gap-2 lg:gap-5 py-3 px-3 lg:px-7">
                 {categoryCounts ? (
                     <>
@@ -246,7 +303,7 @@ export default function ProductCatalogNavbar({user, role, isLoggedIn, onCategory
                                     onClick={() => selectCategory(null)}
                                     className={`rounded-full border border-gray-800 px-3 lg:px-5 py-1.5 text-xs lg:text-sm font-medium transition-all duration-200 hover:-translate-y-0.5 ${category === null ? 'bg-[#4b9cd3] text-white' : 'bg-white'} focus:outline-none`}
                                 >
-                                    All ({total})
+                                    {t('All')} ({total})
                                 </button>
                             );
                         })()}
@@ -256,26 +313,15 @@ export default function ProductCatalogNavbar({user, role, isLoggedIn, onCategory
                                 onClick={() => selectCategory(k)}
                                 className={`rounded-full border border-gray-800 px-3 lg:px-5 py-1.5 text-xs lg:text-sm font-medium transition-all duration-200 hover:-translate-y-0.5 ${category === k ? 'bg-[#4b9cd3] text-white' : 'bg-white'} focus:outline-none`}
                             >
-                                {k === 'uncategorized' ? 'Uncategorized' : k} ({cnt})
+                                {t(k === 'uncategorized' ? 'Uncategorized' : k)} ({cnt})
                             </button>
                         ))}
                     </>
-                ) : (
-                    <>
-                        {['All', 'Chair', 'Table', 'Shoes', 'Book', 'Electronic', 'Bookshelf', 'Fan', 'Desk Lamp', 'Stationery', 'Tableware', 'Backpack', 'Jacket'].map((cat) => (
-                            <button
-                                key={cat}
-                                onClick={() => selectCategory(cat === 'All' ? null : cat)}
-                                className="rounded-full border border-gray-800 bg-white px-3 lg:px-5 py-1.5 text-xs lg:text-sm font-medium transition-all duration-200 hover:-translate-y-0.5 hover:bg-gray-100 focus:border-blue-500 focus:bg-blue-500 focus:text-white focus:outline-none"
-                            >
-                                {cat}
-                        </button>
-                        ))}
-                    </>
-                )}
+                ) : null}
             </div>
-
             <hr className="p-0 m-0 border-t border-gray-300" />
+            </>
+            )}
         </>
     );
 }
