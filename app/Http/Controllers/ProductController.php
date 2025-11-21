@@ -46,16 +46,22 @@ class ProductController extends Controller
 
         // Fetch seller info
         $seller = User::find($sellerId);
-        $sellerName = $seller?->name ?? 'Unknown Seller';
+        if (!$seller) {
+            $locale = $request->route('locale') ?? 'id';
+            return redirect()->route('home', ['locale' => $locale])->with('error', 'Seller not found');
+        }
+
+        $sellerName = $seller->name ?? 'Unknown Seller';
         $itemsCount = Product::where('user_id', $sellerId)->count();
         $sellerRating = round((float) Review::where('reviewee_id', $sellerId)->avg('rating'), 1);
-        $sellerJoined = $seller?->created_at?->format('d M Y') ?? '';
+        $sellerJoined = $seller->created_at?->format('d M Y') ?? '';
 
         return Inertia::render('SellerProductPage', [
             'products' => $products,
-            'role' => 'Seller',
+            'role' => Auth::user()?->role ?? 'Guest',
+            'user' => Auth::user(),
             'seller' => [
-                'id' => $sellerId,
+                'id' => $sellerId, // Always set - this is the shop owner's ID
                 'name' => $sellerName,
                 'itemsCount' => $itemsCount,
                 'rating' => $sellerRating,

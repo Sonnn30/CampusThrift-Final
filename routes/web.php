@@ -211,11 +211,31 @@ Route::prefix('{locale}')
             Route::get('/Buyer', [AuthManager::class, 'UserDashboard'])->name('BuyerHome');
             Route::get('/Seller', [AuthManager::class, 'UserDashboard'])->name('SellerHome');
 
-            // Profile Routes
-            Route::get('/Profile/{role}', [ProfileController::class, 'show']);
-            Route::post('/Profile/{role}', [ProfileController::class, 'storeOrUpdate']);
-            Route::delete('/Profile/{role}', [ProfileController::class, 'destroy']);
-            Route::post('/Profile/{role}/report', [ProfileController::class, 'submitReport'])->name('profile.submitReport');
+            // Profile Routes - New format: /Profile/{role}/{userId} (must be defined first for proper matching)
+            // Constraint ensures role is Buyer or Seller, and userId is numeric
+            Route::get('/Profile/{role}/{userId}', [ProfileController::class, 'show'])
+                ->where(['role' => 'Buyer|Seller', 'userId' => '[0-9]+'])
+                ->name('profile.show');
+            Route::post('/Profile/{role}/{userId}', [ProfileController::class, 'storeOrUpdate'])
+                ->where(['role' => 'Buyer|Seller', 'userId' => '[0-9]+'])
+                ->name('profile.update');
+            Route::delete('/Profile/{role}/{userId}', [ProfileController::class, 'destroy'])
+                ->where(['role' => 'Buyer|Seller', 'userId' => '[0-9]+'])
+                ->name('profile.destroy');
+            Route::post('/Profile/{role}/{userId}/report', [ProfileController::class, 'submitReport'])
+                ->where(['role' => 'Buyer|Seller', 'userId' => '[0-9]+'])
+                ->name('profile.submitReport');
+
+            // Profile Routes - Backward compatibility: /Profile/{userId} (for numeric ID) or /Profile/{role} (for role string)
+            // This route will match /Profile/123 (numeric) or /Profile/Buyer (string)
+            Route::get('/Profile/{userId}', [ProfileController::class, 'show'])
+                ->name('profile.show.legacy');
+            Route::post('/Profile/{userId}', [ProfileController::class, 'storeOrUpdate'])
+                ->name('profile.update.legacy');
+            Route::delete('/Profile/{userId}', [ProfileController::class, 'destroy'])
+                ->name('profile.destroy.legacy');
+            Route::post('/Profile/{userId}/report', [ProfileController::class, 'submitReport'])
+                ->name('profile.submitReport.legacy');
         });
 
         // COD Routes

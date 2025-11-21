@@ -170,7 +170,7 @@ export default function SignUp({flash}){
                         />
                     </div>
                     {selected === "Seller" && !valid_1 &&(
-                        <p className="text-red-600 text-sm mt-1">{t('Email Valid')}</p>
+                        <p className="text-red-600 text-[10px] sm:text-lg lg:text-[16px] mt-1">{t('Email Valid')}</p>
                     )}
                 </div>
 

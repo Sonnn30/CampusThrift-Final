@@ -10,7 +10,13 @@ type Seller = {
     status?: string;
 }
 
-export default function SellerProductPageNavbar({ role, seller }: { role: string; seller?: Seller }) {
+type User = {
+    id?: number;
+    role?: string;
+    name?: string;
+}
+
+export default function SellerProductPageNavbar({ role, seller, user }: { role: string; seller?: Seller; user?: User | null }) {
         const getLocale = () => {
             const path = window.location.pathname;
             const match = path.match(/^\/([a-z]{2})\//);
@@ -18,10 +24,38 @@ export default function SellerProductPageNavbar({ role, seller }: { role: string
         };
 
         function goToProfile(){
-            // if seller has id, go to their profile, otherwise fallback to role
+            // Always go to the seller's profile (the shop owner), not the current user's profile
             const locale = getLocale();
-            const target = seller?.id ? `/${locale}/Profile/${seller.id}` : `/${locale}/Profile/${role}`;
-            window.location.href = target;
+
+            // Debug: Log seller and user info
+            console.log('goToProfile called:', {
+                seller: seller,
+                sellerId: seller?.id,
+                sellerName: seller?.name,
+                currentUserId: user?.id,
+                currentUserName: user?.name,
+                fullSellerObject: JSON.stringify(seller)
+            });
+
+            // CRITICAL: Always use seller.id - this is the shop owner's profile, not the logged-in user's profile
+            // seller.id comes from the shop owner (the user who owns the products)
+            const targetProfileId = seller?.id;
+
+            if (!targetProfileId) {
+                console.error('Seller ID is missing, cannot navigate to profile', {
+                    seller,
+                    user
+                });
+                alert('Seller information not available');
+                return;
+            }
+
+            // Use new format: /Profile/{role}/{userId}
+            // Seller role is always "Seller" for shop owner
+            const targetRole = 'Seller'; // Shop owner is always a seller
+            const profileUrl = `/${locale}/Profile/${targetRole}/${targetProfileId}`;
+            console.log('Navigating to seller profile:', profileUrl);
+            window.location.href = profileUrl;
         }
         function goToChat(){
             // Chat dengan seller ini jika ada ID, atau tidak tampil jika sedang lihat produk sendiri
@@ -46,6 +80,10 @@ export default function SellerProductPageNavbar({ role, seller }: { role: string
         const rating = seller?.rating ?? 0;
         const joinedAt = seller?.joinedAt ?? '';
         const status = seller?.status ?? 'Offline';
+
+        // Check if current user is the owner of this shop
+        const isShopOwner = user?.id && seller?.id && user.id === seller.id;
+        const isSellerRole = role === 'Seller';
 
         const { t } = useTranslation();
 
@@ -167,8 +205,8 @@ export default function SellerProductPageNavbar({ role, seller }: { role: string
                         </div>
                     </div>
 
-                    {/* Right Section - Add Product Button (Seller only) */}
-                    {role === "Seller" && (
+                    {/* Right Section - Add Product Button (Only for shop owner) */}
+                    {isSellerRole && isShopOwner && (
                         <div className="flex justify-center lg:justify-end items-center w-full sm:w-auto">
                             <button
                                 className="w-full sm:w-auto flex items-center justify-center gap-2 bg-white border-2 border-black rounded-full px-5 py-2.5 sm:py-2 text-sm sm:text-base font-semibold cursor-pointer transition-all duration-200 hover:bg-gray-100 hover:shadow-md active:scale-95"

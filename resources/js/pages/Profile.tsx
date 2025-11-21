@@ -1,5 +1,6 @@
-import { useState } from "react"
-import { useForm } from "@inertiajs/react";
+import { useState, useEffect } from "react"
+import React from "react"
+import { useForm, router } from "@inertiajs/react";
 import { usePage } from "@inertiajs/react";
 import axios from 'axios';
 import useTranslation from "@/Hooks/useTranslation";
@@ -35,16 +36,36 @@ export default function Profile({ role, profile }) {
         role: string;
         profile: any;
         user: any;
+        profileOwner?: any;
+        canEdit?: boolean;
         completedTransactions: Transaction[];
     }>();
 
-    const user = props.auth?.user;
+    const user = props.auth?.user ?? props.user;
     const currentRole = (props.role ?? role ?? 'Buyer') as string;
     const profileData = props.profile ?? profile ?? {};
     const completedTransactions = props.completedTransactions || [];
+    const profileOwner = props.profileOwner;
+    const canEdit = props.canEdit ?? false; // Only true if current user is the profile owner
 
-    console.log(currentRole)
-    console.log('Completed Transactions:', completedTransactions);
+    // Reset isHidden if canEdit becomes false (e.g., user navigates to different profile)
+    useEffect(() => {
+        if (!canEdit && isHidden) {
+            setIsHidden(false);
+        }
+    }, [canEdit, isHidden]);
+
+    console.log('Profile component rendered', {
+        canEdit,
+        currentUserId: user?.id,
+        profileOwnerId: profileOwner?.id,
+        currentRole,
+        profileData: profileData ? {
+            firstname: profileData.firstname,
+            lastname: profileData.lastname,
+            email: profileData.email
+        } : null
+    });
 
     const handleReportSubmit = async () => {
         const reasons = [];
@@ -74,26 +95,32 @@ export default function Profile({ role, profile }) {
                 return;
             }
 
-            const response = await axios.post(`/${locale}/Profile/${currentRole}/report`, {
-                reported_id: reportedUserId,
-                appointment_id: appointmentId,
-                reasons: reasons,
-                additional_notes: ""
-            });
+            // Use new format: /Profile/{role}/{userId}/report
+            const profileUserId = profileOwner?.id ?? user?.id;
+            if (profileUserId) {
+                const response = await axios.post(`/${locale}/Profile/${currentRole}/${profileUserId}/report`, {
+                    reported_id: reportedUserId,
+                    appointment_id: appointmentId,
+                    reasons: reasons,
+                    additional_notes: ""
+                });
 
-            console.log('Report submitted:', response.data);
-            alert('Report submitted successfully!');
-            setReported(false);
+                console.log('Report submitted:', response.data);
+                alert('Report submitted successfully!');
+                setReported(false);
 
-            // Reset selections
-            setSelected(false);
-            setSelected2(false);
-            setSelected3(false);
-            setSelected4(false);
-            setSelected5(false);
-            setSelected6(false);
-            setSelected7(false);
-            setSelected8(false);
+                // Reset selections
+                setSelected(false);
+                setSelected2(false);
+                setSelected3(false);
+                setSelected4(false);
+                setSelected5(false);
+                setSelected6(false);
+                setSelected7(false);
+                setSelected8(false);
+            } else {
+                alert('User information not available');
+            }
         } catch (error) {
             console.error('Error submitting report:', error);
             alert('Failed to submit report');
@@ -114,15 +141,59 @@ export default function Profile({ role, profile }) {
         email: profileData?.email || "",
     });
 
-    const handleSubmit = (e) => {
+    const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+
+        // Only allow editing if user is the profile owner
+        if (!canEdit) {
+            alert('You can only edit your own profile');
+            return;
+        }
+
+        // CRITICAL: Always use current user's ID, not profileOwner's ID
+        // This ensures user can only edit their own profile
         const locale = getLocale();
-        post(`/${locale}/Profile/${currentRole}`, {
-            onSuccess: () => {
+        const currentUserId = user?.id;
+
+        if (!currentUserId) {
+            alert('User information not available');
+            return;
+        }
+
+        // Double check: ensure we're editing our own profile
+        if (profileOwner?.id && profileOwner.id !== currentUserId) {
+            alert('You can only edit your own profile');
+            return;
+        }
+
+        // Use new format: /Profile/{role}/{userId} - always use current user's ID
+        const updateUrl = `/${locale}/Profile/${currentRole}/${currentUserId}`;
+        console.log('Submitting profile update', {
+            url: updateUrl,
+            data: data,
+            canEdit,
+            currentUserId,
+            currentRole,
+            profileOwnerId: profileOwner?.id
+        });
+
+        // Use router.post directly like in SellerProductEdit
+        router.post(updateUrl, data, {
+            preserveScroll: true,
+            onSuccess: (page) => {
+                console.log('Profile update success', page);
                 alert('Profile berhasil disimpan!');
+                setIsHidden(false);
             },
-            onError: () => {
-                alert('Gagal menyimpan profile');
+            onError: (errors) => {
+                console.error('Profile update errors:', errors);
+                if (errors?.message) {
+                    alert('Gagal menyimpan profile: ' + errors.message);
+                } else if (typeof errors === 'string') {
+                    alert('Gagal menyimpan profile: ' + errors);
+                } else {
+                    alert('Gagal menyimpan profile. Silakan coba lagi.');
+                }
             },
         });
     };
@@ -135,12 +206,20 @@ export default function Profile({ role, profile }) {
                 {/* Header */}
                 <div className="flex justify-between items-center w-full max-w-[1350px]">
                     <h1 className="text-2xl sm:text-3xl lg:text-[38px] font-semibold">{currentRole} {t('Profile')}</h1>
-                    <img
-                        src="/editblack.png"
-                        alt="edit"
-                        className="w-8 h-8 sm:w-10 sm:h-10 lg:w-[40px] lg:h-[40px] cursor-pointer hover:opacity-70 transition-opacity"
-                        onClick={() => setIsHidden(!isHidden)}
-                    />
+                    {canEdit && (
+                        <img
+                            src="/editblack.png"
+                            alt="edit"
+                            className="w-8 h-8 sm:w-10 sm:h-10 lg:w-[40px] lg:h-[40px] cursor-pointer hover:opacity-70 transition-opacity"
+                            onClick={() => {
+                                if (!canEdit) {
+                                    alert('You can only edit your own profile');
+                                    return;
+                                }
+                                setIsHidden(!isHidden);
+                            }}
+                        />
+                    )}
                 </div>
 
                 {/* User Info Card */}
@@ -148,9 +227,9 @@ export default function Profile({ role, profile }) {
                     <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-5">
                         <img src="/user.png" alt="user" className="w-20 h-20 sm:w-28 sm:h-28 lg:w-[123px] lg:h-[123px] rounded-full border-4 border-gray-200"/>
                         <div className="flex flex-col gap-1 text-center sm:text-left">
-                            <h1 className="text-2xl sm:text-3xl lg:text-[36px] font-bold">{user?.name}</h1>
+                            <h1 className="text-2xl sm:text-3xl lg:text-[36px] font-bold">{profileOwner?.name ?? user?.name ?? 'User'}</h1>
                             <p className="text-lg sm:text-xl lg:text-[24px] text-gray-600">
-                                {isHidden ? (
+                                {isHidden && canEdit ? (
                                     <input type="text" placeholder="Angkatan"
                                         value={data.angkatan}
                                         onChange={(e) => setData("angkatan", e.target.value)}
@@ -174,7 +253,7 @@ export default function Profile({ role, profile }) {
                         <div className="flex flex-col gap-8 sm:gap-12 lg:gap-20 text-base sm:text-xl lg:text-[24px] flex-1">
                             <div className="flex flex-col gap-2">
                                 <p className="text-[#2A6C86] font-semibold">{t('First name')}</p>
-                                {isHidden ? (
+                                {isHidden && canEdit ? (
                                     <input type="text"
                                         value={data.firstname}
                                         onChange={(e) => setData("firstname", e.target.value)}
@@ -186,7 +265,7 @@ export default function Profile({ role, profile }) {
                             </div>
                             <div className="flex flex-col gap-2">
                                 <p className="text-[#2A6C86] font-semibold">{t('Email address')}</p>
-                                {isHidden ? (
+                                {isHidden && canEdit ? (
                                     <input type="text"
                                         value={data.email}
                                         onChange={(e) => setData("email", e.target.value)}
@@ -202,7 +281,7 @@ export default function Profile({ role, profile }) {
                         <div className="flex flex-col gap-8 sm:gap-12 lg:gap-20 text-base sm:text-xl lg:text-[24px] flex-1">
                             <div className="flex flex-col gap-2">
                                 <p className="text-[#2A6C86] font-semibold">{t('Last name')}</p>
-                                {isHidden ? (
+                                {isHidden && canEdit ? (
                                     <input type="text"
                                         value={data.lastname}
                                         onChange={(e) => setData("lastname", e.target.value)}
@@ -214,7 +293,7 @@ export default function Profile({ role, profile }) {
                             </div>
                             <div className="flex flex-col gap-2">
                                 <p className="text-[#2A6C86] font-semibold">{t('University')}</p>
-                                {isHidden ? (
+                                {isHidden && canEdit ? (
                                     <input type="text"
                                         value={data.university}
                                         onChange={(e) => setData("university", e.target.value)}
@@ -228,50 +307,92 @@ export default function Profile({ role, profile }) {
                     </form>
                 </div>
 
-                {/* Credibility Card */}
-                <div className="flex flex-col gap-4 w-full max-w-[1350px] shadow-2xl rounded-2xl px-6 sm:px-8 lg:px-10 py-6 sm:py-8 bg-white">
-                    <div className="flex justify-start">
-                        <h1 className="text-2xl sm:text-3xl lg:text-[38px] font-bold">{t('Credibility')}</h1>
-                    </div>
-                    <div className="flex flex-col sm:flex-row gap-8 sm:gap-12 lg:gap-20 xl:gap-92 py-4 sm:py-6 lg:py-10">
-                        {/* Left Column */}
-                        <div className="flex flex-col gap-8 sm:gap-12 lg:gap-20 text-base sm:text-xl lg:text-[24px] flex-1">
-                            <div className="flex flex-col gap-2">
-                                <p className="text-[#2A6C86] font-semibold">{t('Item selled')}</p>
-                                <p className="text-gray-700">n selled</p>
+                {/* Credibility Card - Different for Buyer and Seller */}
+                {currentRole === 'Seller' ? (
+                    /* Seller Credibility Card */
+                    <div className="flex flex-col gap-4 w-full max-w-[1350px] shadow-2xl rounded-2xl px-6 sm:px-8 lg:px-10 py-6 sm:py-8 bg-white">
+                        <div className="flex justify-start">
+                            <h1 className="text-2xl sm:text-3xl lg:text-[38px] font-bold">{t('Credibility')}</h1>
+                        </div>
+                        <div className="flex flex-col sm:flex-row gap-8 sm:gap-12 lg:gap-20 xl:gap-92 py-4 sm:py-6 lg:py-10">
+                            {/* Left Column */}
+                            <div className="flex flex-col gap-8 sm:gap-12 lg:gap-20 text-base sm:text-xl lg:text-[24px] flex-1">
+                                <div className="flex flex-col gap-2">
+                                    <p className="text-[#2A6C86] font-semibold">{t('Item selled')}</p>
+                                    <p className="text-gray-700">{profileData?.item_buyed ?? 0} {t('items')}</p>
+                                </div>
+                                <div className="flex flex-col gap-2">
+                                    <p className="text-[#2A6C86] font-semibold">{t('Response time')}</p>
+                                    <p className="text-gray-700">1 hour</p>
+                                </div>
                             </div>
-                            <div className="flex flex-col gap-2">
-                                <p className="text-[#2A6C86] font-semibold">{t('Response time')}</p>
-                                <p className="text-gray-700">1 hour</p>
+
+                            {/* Right Column */}
+                            <div className="flex flex-col gap-8 sm:gap-12 lg:gap-20 text-base sm:text-xl lg:text-[24px] flex-1">
+                                <div className="flex flex-col gap-2">
+                                    <p className="text-[#2A6C86] font-semibold">{t('Status')}</p>
+                                    <p className="text-green-600 font-semibold">Online</p>
+                                </div>
+                                <div className="flex flex-col gap-2">
+                                    <p className="text-[#2A6C86] font-semibold">{t('Account age')}</p>
+                                    <p className="text-gray-700">1 Year</p>
+                                </div>
                             </div>
                         </div>
-
-                        {/* Right Column */}
-                        <div className="flex flex-col gap-8 sm:gap-12 lg:gap-20 text-base sm:text-xl lg:text-[24px] flex-1">
-                            <div className="flex flex-col gap-2">
-                                <p className="text-[#2A6C86] font-semibold">{t('Status')}</p>
-                                <p className="text-green-600 font-semibold">Online</p>
+                    </div>
+                ) : (
+                    /* Buyer Credibility Card */
+                    <div className="flex flex-col gap-4 w-full max-w-[1350px] shadow-2xl rounded-2xl px-6 sm:px-8 lg:px-10 py-6 sm:py-8 bg-white">
+                        <div className="flex justify-start">
+                            <h1 className="text-2xl sm:text-3xl lg:text-[38px] font-bold">{t('Credibility')}</h1>
+                        </div>
+                        <div className="flex flex-col sm:flex-row gap-8 sm:gap-12 lg:gap-20 xl:gap-92 py-4 sm:py-6 lg:py-10">
+                            {/* Left Column */}
+                            <div className="flex flex-col gap-8 sm:gap-12 lg:gap-20 text-base sm:text-xl lg:text-[24px] flex-1">
+                                <div className="flex flex-col gap-2">
+                                    <p className="text-[#2A6C86] font-semibold">{t('Item bought')}</p>
+                                    <p className="text-gray-700">{profileData?.item_selled ?? 0} {t('items')}</p>
+                                </div>
+                                <div className="flex flex-col gap-2">
+                                    <p className="text-[#2A6C86] font-semibold">{t('Total transactions')}</p>
+                                    <p className="text-gray-700">{completedTransactions.length} {t('transactions')}</p>
+                                </div>
                             </div>
-                            <div className="flex flex-col gap-2">
-                                <p className="text-[#2A6C86] font-semibold">{t('Account age')}</p>
-                                <p className="text-gray-700">1 Year</p>
+
+                            {/* Right Column */}
+                            <div className="flex flex-col gap-8 sm:gap-12 lg:gap-20 text-base sm:text-xl lg:text-[24px] flex-1">
+                                <div className="flex flex-col gap-2">
+                                    <p className="text-[#2A6C86] font-semibold">{t('Status')}</p>
+                                    <p className="text-green-600 font-semibold">Online</p>
+                                </div>
+                                <div className="flex flex-col gap-2">
+                                    <p className="text-[#2A6C86] font-semibold">{t('Account age')}</p>
+                                    <p className="text-gray-700">1 Year</p>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
+                )}
 
-                {/* Action Buttons */}
+                {/* Action Buttons - Only show if user can edit */}
+                {canEdit && (
                 <div className="flex flex-col sm:flex-row justify-center gap-4 sm:gap-3 w-full max-w-[1350px]">
-                    {isHidden ? (
+                    {isHidden && canEdit ? (
                         <div className="text-2xl sm:text-3xl lg:text-[42px] border-2 border-gray-300 w-full sm:w-[600px] lg:w-[800px] h-[70px] sm:h-[80px] lg:h-[90px] flex justify-center items-center rounded-3xl cursor-pointer hover:bg-gray-100 transition-colors bg-white" onClick={(e) => {
                             e.preventDefault();
+                            if (!canEdit) {
+                                alert('You can only edit your own profile');
+                                return;
+                            }
                             handleSubmit(e);
-                            setIsHidden(!isHidden);
                         }}>
-                            <button type="submit" disabled={processing} className="cursor-pointer font-semibold" onClick={(e) => {
+                            <button type="submit" disabled={processing || !canEdit} className="cursor-pointer font-semibold" onClick={(e) => {
                                 e.preventDefault();
+                                if (!canEdit) {
+                                    alert('You can only edit your own profile');
+                                    return;
+                                }
                                 handleSubmit(e);
-                                setIsHidden(!isHidden);
                             }}>
                                 {processing ? "Saving..." : "Update"}
                             </button>
@@ -302,6 +423,7 @@ export default function Profile({ role, profile }) {
                         </>
                     )}
                 </div>
+                )}
                 {/* Completed Transactions Modal */}
                 {completed && (
                     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">

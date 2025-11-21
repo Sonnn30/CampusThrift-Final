@@ -21,7 +21,7 @@ export default function SellerProductPage({ role, products, seller }: { role?: s
     return (
         <>
             <ProductCatalogNavbar user={user} role={resolvedRole} isLoggedIn={isLoggedIn} />
-            <SellerProductPageNavbar role={resolvedRole} seller={seller} />
+            <SellerProductPageNavbar role={resolvedRole} seller={seller} user={user} />
             <SellerProductCard role={resolvedRole} products={products} />
         </>
     );

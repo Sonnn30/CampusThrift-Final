@@ -41,7 +41,17 @@ export default function ProductCatalogNavbar({
     }
     function goToProfile(){
         const locale = getLocale();
-        window.location.href = `/${locale}/Profile/${role}`
+        // Use new format: /Profile/{role}/{userId} for current user's profile
+        const currentUserId = user?.id;
+        const userRole = role || user?.role || 'Buyer';
+
+        if (currentUserId && userRole) {
+            window.location.href = `/${locale}/Profile/${userRole}/${currentUserId}`;
+        } else {
+            // Fallback to old format if user ID not available
+            console.warn('User ID or role not available, using fallback format');
+            window.location.href = `/${locale}/Profile/${userRole || 'Buyer'}`;
+        }
     }
     function goToLogin(){
         const locale = getLocale();
