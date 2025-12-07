@@ -1,7 +1,7 @@
 # CampusThrift
 Thrifting menjadi salah satu cara masyarakat memenuhi kebutuhan. Thrifting merupakan kegiatan membeli barang bekas karena keuntungannya dalam menghemat pengeluaran yang tetap mengikuti jaman (Julia, S. R., Zunaedi, R. A., & Putra, P. S., 2024). 
 
-Dalam penerapannya toko thrifting masih banyak yang belum memanfaatkan teknologi dengan baik agar penjualannya maksimal. Proyek kali ini dikembangkan untuk membantu mahasiswa untuk melakukan kegiatan jual-beli dengan sistem wesbite yang interaktif dan mudah digunakan.
+Dalam penerapannya toko thrifting masih banyak yang belum memanfaatkan teknologi dengan baik agar penjualannya maksimal. Proyek kali ini dikembangkan untuk membantu mahasiswa dalam melakukan kegiatan jual-beli dengan sistem wesbite yang interaktif dan mudah digunakan.
 
 Oleh karena itu, pengembangan website dengan framework Laravel sangat membantu. Proyek ini diharapkan dapat menciptakan solusi untuk meningkatkan efektivitas dan memberikan kontribusi yang positif.
 
