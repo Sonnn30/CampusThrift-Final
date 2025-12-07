@@ -32,9 +32,6 @@ Implementasi proyek yang kami kerjakan menggunakan beberapa tools dan teknologi,
 3. Database		: mysql
 4. Platform		: Visual Studio Code dan GitHub
 
-## Web Application
-<img src="\Bukti Website.JPG" alt="Preview" width="600"/>
-
 ## Hasil
 Pengembangan website berhasil diimplementasikan dengan hasil sebagai berikut:
 1. Website CampusThrift berhasil dibangun dengan tampilan responsif dan mudah digunakan oleh pengguna.
