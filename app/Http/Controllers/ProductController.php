@@ -33,12 +33,28 @@ class ProductController extends Controller
                     'description' => $product->description,
                     'category' => is_string($product->category) ? strtolower($product->category) : ($product->category ?? null),
                     'images' => $product->getMedia('product_images')->map(function($m) {
-                        $url = $m->getUrl();
-                        if (!filter_var($url, FILTER_VALIDATE_URL)) {
-                            return url($url);
+                        // Get URL based on disk
+                        $disk = $m->disk;
+                        if ($disk === 'public') {
+                            // For public storage, use getUrl() and ensure it's absolute
+                            $url = $m->getUrl();
+                            if (!filter_var($url, FILTER_VALIDATE_URL)) {
+                                // Ensure /storage prefix for public storage
+                                if (!str_starts_with($url, '/storage')) {
+                                    $url = '/storage/' . ltrim($url, '/');
+                                }
+                                return url($url);
+                            }
+                            return $url;
+                        } else {
+                            // For S3 or other disks, use getUrl() directly
+                            $url = $m->getUrl();
+                            if (!filter_var($url, FILTER_VALIDATE_URL)) {
+                                return url($url);
+                            }
+                            return $url;
                         }
-                        return $url;
-                    }),
+                    })->filter()->values()->all(),
                     'user_id' => $product->user_id,
                     'seller_id' => $product->user_id,
                 ];
@@ -85,12 +101,20 @@ class ProductController extends Controller
                 'category' => is_string($product->category) ? strtolower($product->category) : ($product->category ?? null),
                 'seller_name' => $product->user->name ?? 'Unknown Seller',
                 'images' => $product->getMedia('product_images')->map(function($m) {
+                    // Get URL based on disk
+                    $disk = $m->disk;
                     $url = $m->getUrl();
+
+                    // If URL is not absolute, make it absolute
                     if (!filter_var($url, FILTER_VALIDATE_URL)) {
+                        // For public storage, prepend /storage if needed
+                        if ($disk === 'public' && !str_starts_with($url, '/storage')) {
+                            $url = '/storage/' . ltrim($url, '/');
+                        }
                         return url($url);
                     }
                     return $url;
-                }),
+                })->filter()->values()->all(),
                 'sales_count' => $salesCount,
                 'user_id' => $product->user_id,
                 'seller_id' => $product->user_id,
@@ -152,12 +176,20 @@ public function edit($locale, $product)
             'location' => $product->location,
             'category' => $product->category,
             'images' => $product->getMedia('product_images')->map(function($m) {
+                // Get URL based on disk
+                $disk = $m->disk;
                 $url = $m->getUrl();
+
+                // If URL is not absolute, make it absolute
                 if (!filter_var($url, FILTER_VALIDATE_URL)) {
+                    // For public storage, prepend /storage if needed
+                    if ($disk === 'public' && !str_starts_with($url, '/storage')) {
+                        $url = '/storage/' . ltrim($url, '/');
+                    }
                     return url($url);
                 }
                 return $url;
-            }),
+            })->filter()->values()->all(),
         ],
     ]);
 }
@@ -167,64 +199,104 @@ public function edit($locale, $product)
     public function store(Request $request)
 {
     try {
-        // dd($request->all());
-        $request->validate([
+        Log::info('Product store request received', [
+            'has_images' => $request->hasFile('images'),
+            'image_count' => $request->hasFile('images') ? count($request->file('images')) : 0,
+            'product_name' => $request->product_name,
+            'all_data' => $request->except(['images']),
+        ]);
+
+        // Validate non-file fields first
+        $validated = $request->validate([
             'product_name'    => 'required|string|max:255',
             'product_price'   => 'required|numeric|min:1',
             'description'     => 'required|string',
             'shipping_method' => 'required|array|min:1',
             'location'        => 'required|string',
             'category'        => 'required|string',
-            'images.*' => 'required|image|max:10240'
         ]);
 
-    $product = Product::create([
-        'user_id'         => Auth::id(),
-        'product_name'    => $request->product_name,
-        'product_price'   => $request->product_price,
-        'description'     => $request->description,
-        'shipping_method' => $request->shipping_method,
-        'location'        => $request->location,
-        'category'        => $request->category,
-    ]);
+        // Validate images separately
+        if (!$request->hasFile('images') || count($request->file('images')) === 0) {
+            return back()->withErrors(['images' => 'Please upload at least one image.'])->withInput();
+        }
 
-    // Upload dan attach image
-    if ($request->hasFile('images')) {
-        foreach ($request->file('images') as $file) {
-            if ($file->isValid()) {
-                try {
-                    // Try S3 first, fallback to public if fails
-                    $media = MediaUploader::fromSource($file)
-                        ->toDisk('s3')              // simpan di AWS S3
-                        ->toDirectory('products')   // folder di bucket
-                        ->upload();
-                } catch (\Exception $e) {
-                    // Fallback to public storage if S3 fails
-                    Log::warning('S3 upload failed, using public storage: ' . $e->getMessage());
-                    $media = MediaUploader::fromSource($file)
-                        ->toDisk('public')          // fallback ke local storage
-                        ->toDirectory('products')   // folder di storage/app/public
-                        ->upload();
+        $request->validate([
+            'images.*' => 'required|image|mimes:jpeg,jpg,png,gif,webp|max:10240'
+        ]);
+
+        Log::info('Validation passed', [
+            'product_name' => $validated['product_name'],
+            'images_count' => count($request->file('images'))
+        ]);
+
+        $product = Product::create([
+            'user_id'         => Auth::id(),
+            'product_name'    => $request->product_name,
+            'product_price'   => $request->product_price,
+            'description'     => $request->description,
+            'shipping_method' => $request->shipping_method,
+            'location'        => $request->location,
+            'category'        => $request->category,
+        ]);
+
+        Log::info('Product created', ['product_id' => $product->id]);
+
+        // Upload dan attach image
+        $uploadedCount = 0;
+        if ($request->hasFile('images')) {
+            foreach ($request->file('images') as $file) {
+                if ($file->isValid()) {
+                    try {
+                        // Try S3 first, fallback to public if fails
+                        $media = MediaUploader::fromSource($file)
+                            ->toDisk('s3')              // simpan di AWS S3
+                            ->toDirectory('products')   // folder di bucket
+                            ->upload();
+                        Log::info('Image uploaded to S3', ['media_id' => $media->id]);
+                    } catch (\Exception $e) {
+                        // Fallback to public storage if S3 fails
+                        Log::warning('S3 upload failed, using public storage: ' . $e->getMessage());
+                        try {
+                            $media = MediaUploader::fromSource($file)
+                                ->toDisk('public')          // fallback ke local storage
+                                ->toDirectory('products')   // folder di storage/app/public
+                                ->upload();
+                            Log::info('Image uploaded to public storage', ['media_id' => $media->id]);
+                        } catch (\Exception $e2) {
+                            Log::error('Image upload failed completely', ['error' => $e2->getMessage()]);
+                            continue; // Skip this file and continue with next
+                        }
+                    }
+
+                    $product->attachMedia($media, 'product_images');
+                    $uploadedCount++;
+                } else {
+                    Log::warning('Invalid file detected', ['file_name' => $file->getClientOriginalName()]);
                 }
-
-                $product->attachMedia($media, 'product_images');
             }
         }
-    }
-        Log::info('Files received:', [
-        'has_images' => $request->hasFile('images'),
-        'image_count' => $request->hasFile('images') ? count($request->file('images')) : 0,
-    ]);
+
+        Log::info('Product creation completed', [
+            'product_id' => $product->id,
+            'images_uploaded' => $uploadedCount,
+        ]);
 
         $locale = $request->route('locale') ?? 'id';
-        return redirect()->route('SellerProduct', ['locale' => $locale])->with('success', 'Product created successfully!');
+
+        // Use Inertia redirect for proper SPA navigation
+        return redirect()->route('SellerProduct', ['locale' => $locale])
+            ->with('success', 'Product created successfully!');
 
     } catch (\Illuminate\Validation\ValidationException $e) {
         Log::error('Validation error:', $e->errors());
         return back()->withErrors($e->errors())->withInput();
     } catch (\Exception $e) {
-        Log::error('Error creating product:', ['error' => $e->getMessage()]);
-        return back()->with('error', 'Failed to create product. Please try again.')->withInput();
+        Log::error('Error creating product:', [
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ]);
+        return back()->with('error', 'Failed to create product: ' . $e->getMessage())->withInput();
     }
 }
 
@@ -340,13 +412,20 @@ public function show(Request $request)
     $images = $product->getMedia('product_images');
     $imageUrls = $images->isNotEmpty()
         ? $images->map(function($m) {
+            // Get URL based on disk
+            $disk = $m->disk;
             $url = $m->getUrl();
-            // Ensure absolute URL
+
+            // If URL is not absolute, make it absolute
             if (!filter_var($url, FILTER_VALIDATE_URL)) {
+                // For public storage, prepend /storage if needed
+                if ($disk === 'public' && !str_starts_with($url, '/storage')) {
+                    $url = '/storage/' . ltrim($url, '/');
+                }
                 return url($url);
             }
             return $url;
-        })
+        })->filter()->values()->all()
         : [asset('placeholder-2.png')];
 
     // Fetch other products from the same seller (exclude current product)
@@ -362,13 +441,20 @@ public function show(Request $request)
                 'product_name' => $p->product_name,
                 'product_price' => $p->product_price,
                 'images' => $p->getMedia('product_images')->map(function($m) {
+                    // Get URL based on disk
+                    $disk = $m->disk;
                     $url = $m->getUrl();
-                    // Ensure absolute URL
+
+                    // If URL is not absolute, make it absolute
                     if (!filter_var($url, FILTER_VALIDATE_URL)) {
+                        // For public storage, prepend /storage if needed
+                        if ($disk === 'public' && !str_starts_with($url, '/storage')) {
+                            $url = '/storage/' . ltrim($url, '/');
+                        }
                         return url($url);
                     }
                     return $url;
-                }),
+                })->filter()->values()->all(),
             ];
         });
 

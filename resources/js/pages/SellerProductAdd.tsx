@@ -175,9 +175,18 @@ export default function SellerProductAdd({ role }: SellerProductAddProps) {
         });
 
         const locale = getLocale();
+        console.log('Submitting product form', {
+            locale,
+            product_name: product.product_name,
+            image_count: selectedFile.length,
+            formData_keys: Array.from(formData.keys())
+        });
+
         Inertia.post(`/${locale}/Seller/product/add`, formData, {
             forceFormData: true,
-            onSuccess: () => {
+            preserveScroll: false,
+            onSuccess: (page) => {
+                console.log('Product created successfully', page);
                 setProduct({
                     product_name: "",
                     product_price: "",
@@ -189,16 +198,29 @@ export default function SellerProductAdd({ role }: SellerProductAddProps) {
                 setSelectedFile([]);
                 setFileError("");
                 // Navigate to product list after successful creation
-                Inertia.visit(`/${locale}/Seller/product`);
+                // Use Inertia.visit to ensure proper navigation
+                Inertia.visit(`/${locale}/Seller/product`, {
+                    preserveState: false,
+                    preserveScroll: false,
+                });
             },
             onError: (errors) => {
                 console.error('Form submission errors:', errors);
-                if (errors.product_price) {
+                if (errors.images) {
+                    alert('Image error: ' + (Array.isArray(errors.images) ? errors.images.join(', ') : errors.images));
+                } else if (errors.product_price) {
                     alert('Please enter a valid price (numbers only)');
                 } else if (errors.product_name) {
                     alert('Please enter a product name');
+                } else if (errors.shipping_method) {
+                    alert('Please select at least one shipping method');
+                } else if (errors.location) {
+                    alert('Please select a location');
                 } else {
-                    alert('Error adding product. Please try again.');
+                    const errorMessage = typeof errors === 'object'
+                        ? Object.values(errors).flat().join(', ')
+                        : 'Error adding product. Please try again.';
+                    alert(errorMessage);
                 }
             },
             onFinish: () => {
