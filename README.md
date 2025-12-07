@@ -39,6 +39,7 @@ Pengembangan website berhasil diimplementasikan dengan hasil sebagai berikut:
 3. Fitur localization berjalan dengan baik sehingga pengguna dapat memilih bahasa Indonesia atau Inggris.
 4. Database penyimpanan data produk dan pengguna berhasil ditampilkan di website.
 5. Sistem berjalan stabil pada seluruh halaman utama, seperti home, login/sign up, detail produk, dan halaman lainnya.
+
 Website dapat digunakan oleh penjual dan pembeli dari mahasiswa dengan baik dan lancar. 
 
 ## Kesimpulan
