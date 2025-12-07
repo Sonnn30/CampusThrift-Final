@@ -42,7 +42,11 @@ export default function Profile({ role, profile }) {
     }>();
 
     const user = props.auth?.user ?? props.user;
-    const currentRole = (props.role ?? role ?? 'Buyer') as string;
+    // CRITICAL: Ensure role is properly capitalized (Buyer or Seller) to match route constraint
+    const roleFromProps = props.role ?? role ?? 'Buyer';
+    const currentRole = typeof roleFromProps === 'string'
+        ? roleFromProps.charAt(0).toUpperCase() + roleFromProps.slice(1).toLowerCase()
+        : 'Buyer';
     const profileData = props.profile ?? profile ?? {};
     const completedTransactions = props.completedTransactions || [];
     const profileOwner = props.profileOwner;
@@ -167,13 +171,18 @@ export default function Profile({ role, profile }) {
         }
 
         // Use new format: /Profile/{role}/{userId} - always use current user's ID
-        const updateUrl = `/${locale}/Profile/${currentRole}/${currentUserId}`;
+        // CRITICAL: Ensure role is exactly "Buyer" or "Seller" (capitalized) to match route constraint
+        const normalizedRole = currentRole === 'Buyer' || currentRole === 'Seller'
+            ? currentRole
+            : (currentRole.toLowerCase() === 'buyer' ? 'Buyer' : 'Seller');
+        const updateUrl = `/${locale}/Profile/${normalizedRole}/${currentUserId}`;
         console.log('Submitting profile update', {
             url: updateUrl,
             data: data,
             canEdit,
             currentUserId,
             currentRole,
+            normalizedRole,
             profileOwnerId: profileOwner?.id
         });
 

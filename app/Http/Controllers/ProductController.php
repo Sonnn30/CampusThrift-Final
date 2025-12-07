@@ -116,7 +116,28 @@ class ProductController extends Controller
 public function edit($locale, $product)
 {
     $product = Product::with('media')->findOrFail($product);
-    // $this->authorize('update', $product); opsional, jika pakai policy
+
+    // CRITICAL: Authorization check - Only allow product owner to edit
+    $currentUserId = Auth::id();
+    if (!$currentUserId) {
+        Log::warning('Unauthenticated product edit attempt', [
+            'product_id' => $product->id,
+            'ip' => request()->ip(),
+        ]);
+        $locale = request()->route('locale') ?? 'id';
+        return redirect()->route('home', ['locale' => $locale])->with('error', 'You must be logged in to edit products');
+    }
+
+    if ($product->user_id !== $currentUserId) {
+        Log::warning('Unauthorized product edit attempt', [
+            'product_id' => $product->id,
+            'product_owner_id' => $product->user_id,
+            'current_user_id' => $currentUserId,
+            'ip' => request()->ip(),
+        ]);
+        $locale = request()->route('locale') ?? 'id';
+        return redirect()->route('home', ['locale' => $locale])->with('error', 'You can only edit your own products');
+    }
 
     return Inertia::render('SellerProductEdit', [
         'role' => 'Seller',
@@ -211,6 +232,28 @@ public function edit($locale, $product)
 public function update(Request $request, $locale, $product)
 {
     $product = Product::with('media')->findOrFail($product);
+
+    // CRITICAL: Authorization check - Only allow product owner to update
+    $currentUserId = Auth::id();
+    if (!$currentUserId) {
+        Log::warning('Unauthenticated product update attempt', [
+            'product_id' => $product->id,
+            'ip' => request()->ip(),
+        ]);
+        $locale = request()->route('locale') ?? 'id';
+        return redirect()->route('home', ['locale' => $locale])->with('error', 'You must be logged in to update products');
+    }
+
+    if ($product->user_id !== $currentUserId) {
+        Log::warning('Unauthorized product update attempt', [
+            'product_id' => $product->id,
+            'product_owner_id' => $product->user_id,
+            'current_user_id' => $currentUserId,
+            'ip' => request()->ip(),
+        ]);
+        $locale = request()->route('locale') ?? 'id';
+        return redirect()->route('home', ['locale' => $locale])->with('error', 'You can only update your own products');
+    }
 
     $request->validate([
         'product_name'    => 'required|string|max:255',
@@ -380,6 +423,29 @@ public function show(Request $request)
     public function destroy(Request $request, $locale, $product)
     {
         $product = Product::findOrFail($product);
+
+        // CRITICAL: Authorization check - Only allow product owner to delete
+        $currentUserId = Auth::id();
+        if (!$currentUserId) {
+            Log::warning('Unauthenticated product delete attempt', [
+                'product_id' => $product->id,
+                'ip' => request()->ip(),
+            ]);
+            $locale = request()->route('locale') ?? 'id';
+            return redirect()->route('home', ['locale' => $locale])->with('error', 'You must be logged in to delete products');
+        }
+
+        if ($product->user_id !== $currentUserId) {
+            Log::warning('Unauthorized product delete attempt', [
+                'product_id' => $product->id,
+                'product_owner_id' => $product->user_id,
+                'current_user_id' => $currentUserId,
+                'ip' => request()->ip(),
+            ]);
+            $locale = request()->route('locale') ?? 'id';
+            return redirect()->route('home', ['locale' => $locale])->with('error', 'You can only delete your own products');
+        }
+
         $product->delete();
         $locale = $request->route('locale') ?? 'id';
         return redirect()->route('SellerProduct', ['locale' => $locale])->with('success', 'Product deleted successfully!');

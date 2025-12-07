@@ -90,8 +90,27 @@ export default function ProductCatalogNavbar({
     function toggleLanguage() {
         const currentLocale = getLocale();
         const nextLocale = currentLocale === 'en' ? 'id' : 'en';
-        const pathWithoutLocale = window.location.pathname.replace(/^\/[a-z]{2}/, "");
-        const newUrl = `/${nextLocale}${pathWithoutLocale}${window.location.search}${window.location.hash}`;
+
+
+        let currentPath = window.location.pathname;
+
+
+        currentPath = currentPath.replace(/^\/(en|id)/, '');
+
+       
+        if (!currentPath.startsWith('/')) {
+            currentPath = '/' + currentPath;
+        }
+
+        const newUrl = `/${nextLocale}${currentPath}${window.location.search}${window.location.hash}`;
+
+        console.log('Language toggle:', {
+            currentLocale,
+            nextLocale,
+            currentPath,
+            newUrl
+        });
+
         window.location.href = newUrl;
     }
 
@@ -262,11 +281,18 @@ export default function ProductCatalogNavbar({
                         </button>
 
                         <button
-                            onClick={toggleLanguage}
+                            onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                toggleLanguage();
+                            }}
                             className="w-full flex items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-[14px] font-medium transition hover:bg-gray-100"
                         >
                             <img src="/language.png" alt="language" className="h-[20px] w-[20px]" />
-                            {getLocale().toUpperCase()}
+                            <span>{getLocale().toUpperCase()}</span>
+                            <span className="text-xs text-gray-500 ml-1">
+                                → {getLocale() === 'en' ? 'ID' : 'EN'}
+                            </span>
                         </button>
 
                         {!isLoggedIn ? (

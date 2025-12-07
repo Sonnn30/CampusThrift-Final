@@ -9,6 +9,7 @@ use App\Models\Appointment;
 use App\Models\Report;
 use App\Models\TransactionDetail;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
@@ -23,7 +24,7 @@ class ProfileController extends Controller
         $routeRole = request()->route('role');
         $routeUserId = request()->route('userId');
 
-        \Log::info('ProfileController::show - Initial parameters', [
+        Log::info('ProfileController::show - Initial parameters', [
             'method_role_param' => $role,
             'method_userId_param' => $userId,
             'route_role_param' => $routeRole,
@@ -38,7 +39,7 @@ class ProfileController extends Controller
             // New format: /Profile/{role}/{userId}
             $targetUserId = (int) $routeUserId;
             $role = ucfirst(strtolower($routeRole));
-            \Log::info('Using new format /Profile/{role}/{userId}', [
+            Log::info('Using new format /Profile/{role}/{userId}', [
                 'role' => $role,
                 'userId' => $targetUserId,
                 'url' => request()->fullUrl()
@@ -59,7 +60,7 @@ class ProfileController extends Controller
                     return redirect()->route('home', ['locale' => $locale])->with('error', 'User not found');
                 }
                 $role = ucfirst(strtolower($targetUser->role));
-                \Log::info('Using old format /Profile/{userId}', [
+                Log::info('Using old format /Profile/{userId}', [
                     'userId' => $targetUserId,
                     'role' => $role,
                     'url' => request()->fullUrl()
@@ -68,7 +69,7 @@ class ProfileController extends Controller
                 // It's a role string (backward compatibility: /Profile/Buyer or /Profile/Seller)
                 $role = ucfirst(strtolower($param));
                 $targetUserId = $currentUserId; // Use current user's ID
-                \Log::info('Using old format /Profile/{role}', [
+                Log::info('Using old format /Profile/{role}', [
                     'role' => $role,
                     'targetUserId' => $targetUserId,
                     'url' => request()->fullUrl()
@@ -89,7 +90,7 @@ class ProfileController extends Controller
         $role = $actualRole;
 
         // Log for debugging - CRITICAL: Verify targetUserId is correct
-        \Log::info('ProfileController::show - Final values', [
+        Log::info('ProfileController::show - Final values', [
             'route_role_param' => request()->route('role'),
             'route_userId_param' => request()->route('userId'),
             'method_role_param' => $role,
@@ -118,7 +119,7 @@ class ProfileController extends Controller
         // Get the profile owner user object
         $profileOwner = \App\Models\User::find($targetUserId);
 
-        \Log::info('ProfileController::show returning', [
+        Log::info('ProfileController::show returning', [
             'targetUserId' => $targetUserId,
             'targetUserName' => $profileOwner?->name,
             'targetUserRole' => $profileOwner?->role,
@@ -226,53 +227,72 @@ class ProfileController extends Controller
     // Create or Update profile (CREATE/UPDATE)
 public function storeOrUpdate(Request $request, $role = null, $userId = null)
 {
-    \Log::info('ProfileController::storeOrUpdate called', [
-        'role_param' => $role,
-        'userId_param' => $userId,
-        'route_role' => $request->route('role'),
-        'route_userId' => $request->route('userId'),
-        'url' => $request->fullUrl(),
-        'method' => $request->method(),
-    ]);
-
     $currentUserId = Auth::id();
 
     if (!$currentUserId) {
-        \Log::warning('Unauthenticated profile update attempt');
+        Log::warning('Unauthenticated profile update attempt');
         return response()->json(['error' => 'Unauthenticated'], 401);
     }
 
-    // Check which route was matched
-    if ($userId !== null && is_numeric($userId) && $role !== null && !is_numeric($role)) {
+    // CRITICAL: Get route parameters directly from request to ensure accuracy
+    $routeRole = $request->route('role');
+    $routeUserId = $request->route('userId');
+
+    Log::info('ProfileController::storeOrUpdate called', [
+        'method_role_param' => $role,
+        'method_userId_param' => $userId,
+        'route_role_param' => $routeRole,
+        'route_userId_param' => $routeUserId,
+        'url' => $request->fullUrl(),
+        'path' => $request->path(),
+        'method' => $request->method(),
+    ]);
+
+    // CRITICAL: Check if we have both parameters (new format: /Profile/{role}/{userId})
+    // Use route parameters directly for accuracy
+    if ($routeUserId !== null && is_numeric($routeUserId) && $routeRole !== null && !is_numeric($routeRole)) {
         // New format: /Profile/{role}/{userId}
-        $targetUserId = (int) $userId;
-        $role = ucfirst(strtolower($role));
-        \Log::info('Using new format /Profile/{role}/{userId}', [
+        $targetUserId = (int) $routeUserId;
+        $role = ucfirst(strtolower($routeRole));
+        Log::info('Using new format /Profile/{role}/{userId}', [
             'role' => $role,
-            'userId' => $targetUserId
+            'userId' => $targetUserId,
+            'url' => $request->fullUrl()
         ]);
     } else {
         // Old format: /Profile/{userId} - $role is actually the userId parameter
-        $param = $role;
+        // Use method parameter as fallback if route parameter not available
+        $param = $routeRole ?? $role;
 
         if (is_numeric($param)) {
             // It's a user ID
             $targetUserId = (int) $param;
             $targetUser = \App\Models\User::find($targetUserId);
             if (!$targetUser) {
+                Log::error('User not found in storeOrUpdate', ['targetUserId' => $targetUserId]);
                 return response()->json(['error' => 'User not found'], 404);
             }
             $role = ucfirst(strtolower($targetUser->role));
+            Log::info('Using old format /Profile/{userId}', [
+                'userId' => $targetUserId,
+                'role' => $role,
+                'url' => $request->fullUrl()
+            ]);
         } else {
             // It's a role string (backward compatibility)
             $role = ucfirst(strtolower($param));
             $targetUserId = $currentUserId; // Use current user's ID
+            Log::info('Using old format /Profile/{role}', [
+                'role' => $role,
+                'targetUserId' => $targetUserId,
+                'url' => $request->fullUrl()
+            ]);
         }
     }
 
     // CRITICAL: Authorization check - Only allow users to edit their own profile
     if ($targetUserId !== $currentUserId) {
-        \Log::warning('Unauthorized profile edit attempt', [
+        Log::warning('Unauthorized profile edit attempt', [
             'currentUserId' => $currentUserId,
             'targetUserId' => $targetUserId,
             'ip' => $request->ip(),
@@ -305,12 +325,13 @@ public function storeOrUpdate(Request $request, $role = null, $userId = null)
         );
     }
 
-    \Log::info('Profile updated successfully', [
+    Log::info('Profile updated successfully', [
         'user_id' => $validated['user_id'],
         'role' => $role,
         'profile_id' => $profile->id,
         'currentUserId' => $currentUserId,
         'targetUserId' => $targetUserId,
+        'url' => $request->fullUrl(),
     ]);
 
     // Redirect back to profile page to show updated data

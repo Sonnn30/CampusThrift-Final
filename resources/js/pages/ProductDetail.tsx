@@ -12,6 +12,9 @@ export default function ProductDetail() {
   const user = (props as any)?.auth?.user ?? props?.user ?? null;
   const isLoggedIn = Boolean(user);
 
+  // CRITICAL: Check if current user is the product owner (only owner can edit)
+  const isProductOwner = user && role === "Seller" && user.id === product?.seller_id;
+
   // Ambil maksimal 5 gambar dari backend
   const images = Array.isArray(product?.images)
     ? product.images.slice(0, 5)
@@ -129,7 +132,8 @@ export default function ProductDetail() {
 
           {/* Right Section - Product Info */}
           <div className="relative w-full lg:w-[495px] lg:flex-shrink-0">
-            {role === "Seller" && (
+            {/* CRITICAL: Only show edit button if user is the product owner */}
+            {isProductOwner && (
               <div
                 className="cursor-pointer absolute top-0 right-0 z-10"
                 onClick={goToEditPage}
