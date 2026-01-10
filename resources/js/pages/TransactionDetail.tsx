@@ -7,6 +7,7 @@ import useTranslation from "@/Hooks/useTranslation";
 type TxnRow = {
     time: string;
     buyer: string;
+    buyer_id?: number;
     method: string;
     id: string;
     appointment_id?: number;
@@ -17,6 +18,7 @@ type TxnRow = {
     location?: string;
     item?: string;
     seller?: string;
+    seller_id?: number;
     image?: string | null;
 }
 
@@ -81,11 +83,27 @@ export default function TransactionDetail({ role, transactions = [] as TxnRow[] 
     }
     function goToProfileB(){
         const locale = getLocale();
-        window.location.href = `/${locale}/Profile/Buyer`
+        const buyerId = rows[0]?.buyer_id;
+        if (buyerId) {
+            // Use new format: /Profile/{role}/{userId}
+            window.location.href = `/${locale}/Profile/Buyer/${buyerId}`;
+        } else {
+            // Fallback to old format if buyer_id not available
+            console.warn('Buyer ID not available, using fallback format');
+            window.location.href = `/${locale}/Profile/Buyer`;
+        }
     }
     function goToProfileS(){
         const locale = getLocale();
-        window.location.href = `/${locale}/Profile/Seller`
+        const sellerId = rows[0]?.seller_id;
+        if (sellerId) {
+            // Use new format: /Profile/{role}/{userId}
+            window.location.href = `/${locale}/Profile/Seller/${sellerId}`;
+        } else {
+            // Fallback to old format if seller_id not available
+            console.warn('Seller ID not available, using fallback format');
+            window.location.href = `/${locale}/Profile/Seller`;
+        }
     }
     const currency = useMemo(() => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }), []);
 
