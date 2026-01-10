@@ -3,7 +3,10 @@ nixPkgs = ['php82', 'php82Extensions.pdo', 'php82Extensions.pdo_mysql', 'php82Ex
 
 [phases.install]
 cmds = [
-  'composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist',
+  'composer config --global process-timeout 2000',
+  'composer config --global github-protocols https',
+  'composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist --no-scripts || (sleep 10 && composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist --no-scripts) || (sleep 20 && composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist)',
+  'composer dump-autoload --optimize --no-dev',
   'npm ci --legacy-peer-deps'
 ]
 
