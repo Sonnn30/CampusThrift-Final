@@ -8,6 +8,7 @@ use App\Models\ProfileSeller;
 use App\Models\Appointment;
 use App\Models\Report;
 use App\Models\TransactionDetail;
+use App\Models\Product;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
@@ -86,6 +87,19 @@ class ProfileController extends Controller
 
         // Get actual role from user and use it (don't redirect if mismatch, just use correct role)
         $actualRole = ucfirst(strtolower($targetUser->role));
+
+        // CRITICAL FIX: If user has products, they should be treated as Seller
+        // This handles cases where user might have wrong role in database but owns products
+        $hasProducts = Product::where('user_id', $targetUserId)->exists();
+        if ($hasProducts && $actualRole === 'Buyer') {
+            Log::warning('User has products but role is Buyer, treating as Seller', [
+                'user_id' => $targetUserId,
+                'database_role' => $actualRole,
+                'has_products' => true
+            ]);
+            $actualRole = 'Seller';
+        }
+
         // Use actual role instead of parameter role to avoid redirect loops
         $role = $actualRole;
 
