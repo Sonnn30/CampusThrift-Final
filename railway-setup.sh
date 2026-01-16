@@ -15,7 +15,7 @@ php artisan route:clear
 php artisan view:clear
 
 # Run migrations
-echo "🗄️ Running migrations..."
+echo " Running migrations..."
 php artisan migrate --force
 
 echo "✅ Railway setup complete!"
