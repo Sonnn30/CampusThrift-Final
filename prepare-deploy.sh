@@ -71,7 +71,7 @@ echo ""
 
 # Summary
 echo "================================================"
-echo -e "${GREEN}✅ DEPLOYMENT PREPARATION COMPLETE!${NC}"
+echo -e "${GREEN} DEPLOYMENT PREPARATION COMPLETE!${NC}"
 echo "================================================"
 echo ""
 echo "Next steps:"
