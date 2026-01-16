@@ -1,7 +1,7 @@
 #!/bin/bash
 # Railway Setup Script
 
-echo "🚀 Setting up Railway deployment..."
+echo " Setting up Railway deployment..."
 
 # Create storage link
 echo "📁 Creating storage link..."
