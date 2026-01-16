@@ -8,7 +8,7 @@ echo " Creating storage link..."
 php artisan storage:link
 
 # Clear all caches
-echo "🧹 Clearing caches..."
+echo " Clearing caches..."
 php artisan cache:clear
 php artisan config:clear
 php artisan route:clear
