@@ -18,4 +18,4 @@ php artisan view:clear
 echo " Running migrations..."
 php artisan migrate --force
 
-echo "✅ Railway setup complete!"
+echo " Railway setup complete!"
