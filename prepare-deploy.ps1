@@ -9,7 +9,7 @@ Write-Host "STEP 1: Generating APP_KEY..." -ForegroundColor Yellow
 $APP_KEY = php artisan key:generate --show
 Write-Host "✓ APP_KEY generated: $APP_KEY" -ForegroundColor Green
 Write-Host ""
-Write-Host "⚠️  SAVE THIS KEY! You'll need it for Railway environment variables." -ForegroundColor Red
+Write-Host "  SAVE THIS KEY! You'll need it for Railway environment variables." -ForegroundColor Red
 Write-Host ""
 Read-Host "Press Enter to continue"
 Write-Host ""
