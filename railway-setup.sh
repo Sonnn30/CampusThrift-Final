@@ -4,7 +4,7 @@
 echo " Setting up Railway deployment..."
 
 # Create storage link
-echo "📁 Creating storage link..."
+echo " Creating storage link..."
 php artisan storage:link
 
 # Clear all caches
