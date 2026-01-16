@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "🚂 CampusThrift - Railway Deployment Preparation"
+echo " CampusThrift - Railway Deployment Preparation"
 echo "================================================"
 echo ""
 
