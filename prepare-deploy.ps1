@@ -1,6 +1,6 @@
 # CampusThrift - Railway Deployment Preparation (Windows)
 
-Write-Host "🚂 CampusThrift - Railway Deployment Preparation" -ForegroundColor Cyan
+Write-Host " CampusThrift - Railway Deployment Preparation" -ForegroundColor Cyan
 Write-Host "================================================" -ForegroundColor Cyan
 Write-Host ""
 
