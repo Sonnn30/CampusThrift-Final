@@ -16,7 +16,8 @@ class ReviewController extends Controller
         $role = $user?->role ?? 'Buyer';
         $appointmentId = (int) $request->query('appointment_id');
 
-        // If no appointment_id provided, try to find a completed appointment for review
+        // If no appointment_id provided
+        // try to find a completed appointment for review
         if (!$appointmentId) {
             if (strtolower($role) === 'buyer') {
                 $appointment = Appointment::where('users_id', $user->id)
@@ -60,7 +61,9 @@ class ReviewController extends Controller
         $user = Auth::user();
         $appointment = Appointment::with(['product.user', 'user'])->findOrFail($data['appointment_id']);
 
-        // Determine reviewee: if reviewer is buyer, reviewee is seller; else buyer
+        // Determine reviewee: 
+        // if reviewer is buyer, reviewee is seller;
+        // else buyer
         $revieweeId = $appointment->product?->user_id === $user->id ? $appointment->users_id : $appointment->product?->user_id;
 
         Review::create([

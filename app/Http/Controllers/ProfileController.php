@@ -21,7 +21,8 @@ class ProfileController extends Controller
     {
         $currentUserId = Auth::id();
 
-        // CRITICAL: Get route parameters directly from request to ensure accuracy
+        // CRITICAL: 
+        // Get route parameters directly from request to ensure accuracy
         $routeRole = request()->route('role');
         $routeUserId = request()->route('userId');
 
@@ -34,7 +35,8 @@ class ProfileController extends Controller
             'path' => request()->path(),
         ]);
 
-        // CRITICAL: Check if we have both parameters (new format: /Profile/{role}/{userId})
+        // CRITICAL: 
+        // Check if we have both parameters (new format: /Profile/{role}/{userId})
         // Use route parameters directly for accuracy
         if ($routeUserId !== null && is_numeric($routeUserId) && $routeRole !== null && !is_numeric($routeRole)) {
             // New format: /Profile/{role}/{userId}
@@ -67,7 +69,8 @@ class ProfileController extends Controller
                     'url' => request()->fullUrl()
                 ]);
             } else {
-                // It's a role string (backward compatibility: /Profile/Buyer or /Profile/Seller)
+                // It's a role string 
+                // (backward compatibility: /Profile/Buyer or /Profile/Seller)
                 $role = ucfirst(strtolower($param));
                 $targetUserId = $currentUserId; // Use current user's ID
                 Log::info('Using old format /Profile/{role}', [
@@ -117,14 +120,16 @@ class ProfileController extends Controller
             'path' => request()->path(),
         ]);
 
-        // CRITICAL: Get profile for the target user (NOT the current user) - Always use $targetUserId
+        // CRITICAL: Get profile for the target user (NOT the current user) 
+        // - Always use $targetUserId
         if ($role === 'Buyer') {
             $profile = ProfileBuyer::where('user_id', $targetUserId)->first();
         } else {
             $profile = ProfileSeller::where('user_id', $targetUserId)->first();
         }
 
-        // CRITICAL: Get completed transactions for the target user (NOT the current user) - Always use $targetUserId
+        // CRITICAL: Get completed transactions for the target user (NOT the current user) 
+        // - Always use $targetUserId
         $completedTransactions = $this->getCompletedTransactions($targetUserId, $role);
 
         // CRITICAL: Check if current user can edit this profile (only owner can edit)

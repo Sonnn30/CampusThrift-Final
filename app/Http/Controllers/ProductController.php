@@ -351,7 +351,7 @@ public function update(Request $request, $locale, $product)
         'category'        => $request->category,
     ]);
 
-    // 1️⃣ Hapus gambar lama yang dihapus user
+    // Hapus gambar lama yang dihapus user
     if ($request->filled('removed_images')) {
         foreach ($request->removed_images as $url) {
             $media = $product->getMedia('product_images')->first(function ($m) use ($url) {
@@ -363,7 +363,7 @@ public function update(Request $request, $locale, $product)
         }
     }
 
-    // 2️⃣ Upload gambar baru
+    // Upload gambar baru
     if ($request->hasFile('images')) {
         foreach ($request->file('images') as $file) {
             if ($file->isValid()) {

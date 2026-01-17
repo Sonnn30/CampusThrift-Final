@@ -38,7 +38,8 @@ class TransactionDetailController extends Controller
             $appointments = $appointments->where('id', (int) $requestedAppointmentId)->values();
         }
 
-        // Map to table rows. If a TransactionDetail exists for an appointment, use it; otherwise compose from appointment.
+        // Map to table rows. 
+        // If a TransactionDetail exists for an appointment, use it; otherwise compose from appointment.
         $appointmentIdToTxn = TransactionDetail::whereIn('appointment_id', $appointments->pluck('id'))
             ->get()
             ->keyBy('appointment_id');
@@ -168,7 +169,8 @@ class TransactionDetailController extends Controller
         $role = 'Seller';
         $appointmentId = (int) $request->query('appointment_id');
 
-        // If no appointment_id provided, try to find the most recent completed appointment for this seller
+        // If no appointment_id provided, 
+        // try to find the most recent completed appointment for this seller
         if (!$appointmentId) {
             $appointment = Appointment::with(['product.user', 'user'])
                 ->whereHas('product', function($q) use ($user) {
