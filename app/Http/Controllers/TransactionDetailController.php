@@ -38,7 +38,8 @@ class TransactionDetailController extends Controller
             $appointments = $appointments->where('id', (int) $requestedAppointmentId)->values();
         }
 
-        // Map to table rows. If a TransactionDetail exists for an appointment, use it; otherwise compose from appointment.
+        // Map to table rows. 
+        // If a TransactionDetail exists for an appointment, use it; otherwise compose from appointment.
         $appointmentIdToTxn = TransactionDetail::whereIn('appointment_id', $appointments->pluck('id'))
             ->get()
             ->keyBy('appointment_id');
