@@ -14,7 +14,7 @@ return [
     "Completed Transaction" => "Transaksi Selesai",
     "Report" => "Laporkan",
     "All Transaction" => "Semua Transaksi",
-    "No Completed Transaction" => "Tidak ada transaksi selesai",
+    "No Completed Transaction" => "Tidak ada transaksi yang selesai",
     "Why" => "Kenapa anda melaporkan"
 
 ];
