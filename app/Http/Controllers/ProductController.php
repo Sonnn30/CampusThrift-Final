@@ -363,7 +363,7 @@ public function update(Request $request, $locale, $product)
         }
     }
 
-    // 2️⃣ Upload gambar baru
+    // Upload gambar baru
     if ($request->hasFile('images')) {
         foreach ($request->file('images') as $file) {
             if ($file->isValid()) {
