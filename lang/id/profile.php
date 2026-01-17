@@ -8,7 +8,7 @@ return [
     "University" => "Universitas",
     "Credibility" => "Kredibilitas",
     "Item selled" => "Barang terjual",
-    "Response time" => "Waktu respon",
+    "Response time" => "Waktu respons",
     "Status" => "Status",
     "Account age" => "Usia akun",
     "Completed Transaction" => "Transaksi Selesai",
