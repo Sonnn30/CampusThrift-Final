@@ -69,7 +69,8 @@ class ProfileController extends Controller
                     'url' => request()->fullUrl()
                 ]);
             } else {
-                // It's a role string (backward compatibility: /Profile/Buyer or /Profile/Seller)
+                // It's a role string 
+                // (backward compatibility: /Profile/Buyer or /Profile/Seller)
                 $role = ucfirst(strtolower($param));
                 $targetUserId = $currentUserId; // Use current user's ID
                 Log::info('Using old format /Profile/{role}', [
