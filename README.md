@@ -28,9 +28,9 @@ Pengguna dapat mengedit data pribadi, seperti nama depan, nama belakang, nama un
 ## Tools yang digunakan
 Implementasi proyek yang kami kerjakan menggunakan beberapa tools dan teknologi, yaitu:
 1. Bahasa pemrograman	: PHP
-2. Framework		: Laravel 11
-3. Database		: mysql
-4. Platform		: Visual Studio Code dan GitHub
+2. Framework		    : Laravel 11
+3. Database		        : mysql
+4. Platform		        : Visual Studio Code dan GitHub
 
 ## Hasil
 Pengembangan website berhasil diimplementasikan dengan hasil sebagai berikut:
