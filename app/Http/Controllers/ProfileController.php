@@ -21,7 +21,8 @@ class ProfileController extends Controller
     {
         $currentUserId = Auth::id();
 
-        // CRITICAL: Get route parameters directly from request to ensure accuracy
+        // CRITICAL: 
+        // Get route parameters directly from request to ensure accuracy
         $routeRole = request()->route('role');
         $routeUserId = request()->route('userId');
 
