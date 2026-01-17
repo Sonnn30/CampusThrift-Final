@@ -120,7 +120,8 @@ class ProfileController extends Controller
             'path' => request()->path(),
         ]);
 
-        // CRITICAL: Get profile for the target user (NOT the current user) - Always use $targetUserId
+        // CRITICAL: Get profile for the target user (NOT the current user) 
+        // - Always use $targetUserId
         if ($role === 'Buyer') {
             $profile = ProfileBuyer::where('user_id', $targetUserId)->first();
         } else {
