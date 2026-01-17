@@ -62,7 +62,8 @@ class ReviewController extends Controller
         $appointment = Appointment::with(['product.user', 'user'])->findOrFail($data['appointment_id']);
 
         // Determine reviewee: 
-        // if reviewer is buyer, reviewee is seller; else buyer
+        // if reviewer is buyer, reviewee is seller;
+        // else buyer
         $revieweeId = $appointment->product?->user_id === $user->id ? $appointment->users_id : $appointment->product?->user_id;
 
         Review::create([
