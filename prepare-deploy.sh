@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "🚂 CampusThrift - Railway Deployment Preparation"
+echo " CampusThrift - Railway Deployment Preparation"
 echo "================================================"
 echo ""
 
@@ -15,7 +15,7 @@ echo -e "${YELLOW}STEP 1: Generating APP_KEY...${NC}"
 APP_KEY=$(php artisan key:generate --show)
 echo -e "${GREEN}✓ APP_KEY generated: ${APP_KEY}${NC}"
 echo ""
-echo "⚠️  SAVE THIS KEY! You'll need it for Railway environment variables."
+echo "  SAVE THIS KEY! You'll need it for Railway environment variables."
 echo ""
 read -p "Press Enter to continue..."
 echo ""
@@ -71,7 +71,7 @@ echo ""
 
 # Summary
 echo "================================================"
-echo -e "${GREEN}✅ DEPLOYMENT PREPARATION COMPLETE!${NC}"
+echo -e "${GREEN} DEPLOYMENT PREPARATION COMPLETE!${NC}"
 echo "================================================"
 echo ""
 echo "Next steps:"
