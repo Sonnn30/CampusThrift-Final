@@ -128,7 +128,8 @@ class ProfileController extends Controller
             $profile = ProfileSeller::where('user_id', $targetUserId)->first();
         }
 
-        // CRITICAL: Get completed transactions for the target user (NOT the current user) - Always use $targetUserId
+        // CRITICAL: Get completed transactions for the target user (NOT the current user) 
+        // - Always use $targetUserId
         $completedTransactions = $this->getCompletedTransactions($targetUserId, $role);
 
         // CRITICAL: Check if current user can edit this profile (only owner can edit)
