@@ -35,7 +35,8 @@ class ProfileController extends Controller
             'path' => request()->path(),
         ]);
 
-        // CRITICAL: Check if we have both parameters (new format: /Profile/{role}/{userId})
+        // CRITICAL: 
+        // Check if we have both parameters (new format: /Profile/{role}/{userId})
         // Use route parameters directly for accuracy
         if ($routeUserId !== null && is_numeric($routeUserId) && $routeRole !== null && !is_numeric($routeRole)) {
             // New format: /Profile/{role}/{userId}
