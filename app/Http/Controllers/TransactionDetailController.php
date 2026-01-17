@@ -169,7 +169,8 @@ class TransactionDetailController extends Controller
         $role = 'Seller';
         $appointmentId = (int) $request->query('appointment_id');
 
-        // If no appointment_id provided, try to find the most recent completed appointment for this seller
+        // If no appointment_id provided, 
+        // try to find the most recent completed appointment for this seller
         if (!$appointmentId) {
             $appointment = Appointment::with(['product.user', 'user'])
                 ->whereHas('product', function($q) use ($user) {
